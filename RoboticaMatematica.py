@@ -4,129 +4,155 @@ from groq import Groq
 from gtts import gTTS
 import base64
 import io
+import json
 
-# --- CONFIGURAÇÃO GROQ ---
-# A chave deve ser colocada nas "Secrets" do Streamlit Cloud como GROQ_API_KEY
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-# --- INTERFACE E CSS ---
+# --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
+# CSS: Barra de rolagem grossa, imagem 1/8 e botões inferiores
 st.markdown("""
     <style>
-    /* Barra de rolagem lateral muito grossa */
-    ::-webkit-scrollbar { width: 35px; }
+    ::-webkit-scrollbar { width: 45px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #1a73e8; border-radius: 10px; }
-    
-    /* Estilo para simular 1/8 da tela para o robô */
-    .robot-container { width: 12.5%; margin-bottom: 20px; }
-    
-    /* Botões fixos na parte inferior */
-    div.stButton > button { height: 3em; font-size: 18px; font-weight: bold; }
+    ::-webkit-scrollbar-thumb { background: #007bff; border-radius: 5px; }
+    .robot-img { width: 12.5%; display: block; margin-left: auto; margin-right: auto; }
+    .footer-buttons { position: fixed; bottom: 0; left: 0; width: 100%; background: white; padding: 10px; z-index: 100; border-top: 2px solid #eee; }
+    div.stButton > button { width: 100%; height: 60px; font-weight: bold; font-size: 16px; }
     </style>
     """, unsafe_allow_html=True)
 
+# --- INICIALIZAÇÃO DA IA ---
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+# Prompt Inviolável (System Message)
+SYSTEM_PROMPT = """
+Sê o "SmartProf", um robô software professor de Matemática.
+REGRAS INVIOLÁVEIS:
+1. ATUAÇÃO: Responde APENAS sobre Matemática. Se o aluno falar sobre outros temas, diz "Sou um especialista em Matemática, não posso ajudar com esse assunto" e trava a conversa.
+2. NÃO RESOLVER: Nunca dês a resolução do exercício original (E1) do aluno.
+3. ANALOGIA: Cria um exercício ES1 100% similar em estrutura mas com valores diferentes.
+4. DIDÁTICA: Divide a explicação de ES1 em passos (Passo 1, Passo 2... Passo n).
+5. FORMATO: Deves retornar SEMPRE um JSON válido com: {"resultado_e1": "valor", "passos": [{"expressao": "...", "explicacao": "..."}, ...]}
+"""
+
 # --- FUNÇÕES DE VOZ ---
 def play_voice(text):
-    tts = gTTS(text=text, lang='pt', slow=False)
-    fp = io.BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    b64 = base64.b64encode(fp.read()).decode()
-    md = f'<audio autoplay="true" src="data:audio/mp3;base64,{b64}">'
-    st.markdown(md, unsafe_allow_html=True)
+    if text:
+        tts = gTTS(text=text, lang='pt', slow=False)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        b64 = base64.b64encode(fp.read()).decode()
+        md = f'<audio autoplay="true" src="data:audio/mp3;base64,{b64}">'
+        st.markdown(md, unsafe_allow_html=True)
 
-# --- INICIALIZAÇÃO DO ESTADO ---
+# --- CONTROLO DE ESTADO ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
-if 'passo_atual' not in st.session_state: st.session_state.passo_atual = 0
-if 'es1_passos' not in st.session_state: st.session_state.es1_passos = []
-if 'e1_resolvido' not in st.session_state: st.session_state.e1_resolvido = None
+if 'nome' not in st.session_state: st.session_state.nome = ""
+if 'passo_atual' not in st.session_state: st.session_state.passo_atual = -1 # -1 significa aguardando E1
+if 'memoria_ia' not in st.session_state: st.session_state.memoria_ia = {}
+if 'chat_historico' not in st.session_state: st.session_state.chat_historico = []
 
-# --- LÓGICA DE ECRÃS ---
-
-# ECRÃ 1: LOGIN
+# --- ECRÃ 1: BOAS-VINDAS ---
 if st.session_state.ecra == 1:
-    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712139.png", width=120) # Cabeça do Robô
-    nome = st.text_input("Olá! Como te chamas?", placeholder="Escreve o teu nome...")
+    st.markdown('<img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img">', unsafe_allow_html=True)
+    nome_input = st.text_input("Insira o seu nome:", value=st.session_state.nome)
     
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("Iniciar Jornada"):
-            if nome:
-                play_voice(f"{nome}, é um prazer contar consigo nesta jornada de discutirmos assuntos de Matemática")
-                with st.spinner("A processar..."):
-                    time.sleep(3) # Processa 3s
-                time.sleep(2) # Espera mais 2s após voz
-                st.session_state.nome_usuario = nome
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Submeter Nome"):
+            if nome_input:
+                st.session_state.nome = nome_input
+                play_voice(f"{nome_input}, é um prazer contar consigo nesta jornada de discutirmos assuntos de Matemática")
+                with st.spinner("Processando..."):
+                    time.sleep(3)
+                time.sleep(2) # Pausa para concluir voz
                 st.session_state.ecra = 2
                 st.rerun()
-    with c2:
+    with col2:
         if st.button("Reiniciar"):
             st.session_state.clear()
             st.rerun()
 
-# ECRÃ 2: MEDIAÇÃO
+# --- ECRÃ 2: MEDIAÇÃO ---
 elif st.session_state.ecra == 2:
-    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712139.png", width=120)
+    st.markdown('<img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img">', unsafe_allow_html=True)
     
-    if st.session_state.passo_atual == 0:
-        e1_input = st.text_area("Insira o exercício que deseja aprender (E1):")
+    # Área de Exercício inicial
+    if st.session_state.passo_atual == -1:
+        e1_input = st.text_area("Apresente o seu exercício de Matemática (E1):")
         if st.button("Submeter Exercício"):
-            with st.spinner("O SmartProf está a preparar a aula..."):
-                # CHAMADA À API GROQ
-                prompt = f"""
-                O aluno enviou o exercício: {e1_input}.
-                Instruções:
-                TRANCA DE ÁREA: Se o tema não for Matemática (Aritmética, Álgebra, Geometria, Cálculo, Estatística, Matemática Discreta),
-                bloqueie o avanço. Responda: 'Este Robô opera exclusivamente em conteúdos matemáticos.
-                1. Resolve o exercício internamente.
-                2. Cria um exercício SIMILAR (ES1) mas com números diferentes.
-                3. Divide a resolução do SIMILAR em passos detalhados (Passo 1, Passo 2, etc).
-                Formato de resposta: Resposta E1: [resultado] | Passos ES1: [passo 1]; [passo 2]; [passo 3]
-                """
-                chat_completion = client.chat.completions.create(
-                    messages=[{"role": "system", "content": "És um professor que nunca dá a resposta direta. Tu ensinas por analogia."},
-                              {"role": "user", "content": prompt}],
-                    model="llama3-8b-8192",
-                )
-                # Simulação de parsing (idealmente usar Regex ou JSON)
-                resposta = chat_completion.choices[0].message.content
-                st.session_state.es1_passos = ["Passo 1: Analisar os dados", "Passo 2: Aplicar a fórmula", "Passo 3: Resolver conta"] 
-                st.session_state.passo_atual = 1
-                play_voice("Não vou resolver o exercício que apresentaste, mas vou instruir-te a resolver. Siga os passos que se seguem.")
-                st.rerun()
+            with st.spinner("Analisando..."):
+                try:
+                    completion = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[{"role": "system", "content": SYSTEM_PROMPT},
+                                  {"role": "user", "content": e1_input}],
+                        response_format={"type": "json_object"}
+                    )
+                    res = json.loads(completion.choices[0].message.content)
+                    st.session_state.memoria_ia = res
+                    st.session_state.passo_atual = 0
+                    time.sleep(2)
+                    play_voice("Não vou resolver o exercício que apresentaste, mas vou instruir-te a resolver. Siga os passos que se seguem")
+                    st.rerun()
+                except Exception as e:
+                    st.error("Erro: Certifica-te que o conteúdo é Matemática.")
 
-    # Exibição Progressiva dos Passos
-    for i in range(st.session_state.passo_atual):
-        st.success(st.session_state.es1_passos[i])
-        # Aqui abriria o campo de dúvidas para o passo atual
+    # Exibição dos Passos (Não apaga os anteriores)
+    if st.session_state.passo_atual >= 0:
+        passos = st.session_state.memoria_ia.get('passos', [])
+        for i in range(st.session_state.passo_atual + 1):
+            if i < len(passos):
+                p = passos[i]
+                st.markdown(f"### Passo {i+1}")
+                st.latex(p['expressao'])
+                st.write(p['explicacao'])
+                
+        # Dúvida sobre o passo atual
+        duvida = st.text_input(f"Dúvida sobre o Passo {st.session_state.passo_atual + 1}?", key=f"duvida_{st.session_state.passo_atual}")
+        if duvida:
+            if st.button("Explicar Dúvida"):
+                play_voice(f"Vou explicar novamente: {passos[st.session_state.passo_atual]['explicacao']}")
 
-    # BARRA DE BOTÕES INFERIOR
-    st.write("---")
-    b1, b2, b3, b4, b5 = st.columns(5)
-    with b1:
-        if st.button("Ecrã 1"): st.session_state.ecra = 1; st.rerun()
-    with b2:
-        if st.button("Reiniciar Chat"): st.session_state.passo_atual = 0; st.rerun()
-    with b4:
-        if st.button("Passo Anterior"):
-            if st.session_state.passo_atual > 1: st.session_state.passo_atual -= 1; st.rerun()
-    with b5:
-        if st.button("Próximo Passo"):
-            if st.session_state.passo_atual < len(st.session_state.es1_passos):
+    # BOTÕES INFERIORES FIXOS
+    st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
+    c1, c2, c3, c4, c5 = st.columns(5)
+    with c1:
+        if st.button("🏠 Ecra 1"): st.session_state.ecra = 1; st.rerun()
+    with c2:
+        if st.button("🗑️ Reiniciar"): st.session_state.passo_atual = -1; st.rerun()
+    with c3:
+        st.button("Recuar Expl.") # Visual
+    with c4:
+        if st.button("◀ Passo Ant."):
+            if st.session_state.passo_atual > 0:
+                st.session_state.passo_atual -= 1; st.rerun()
+    with c5:
+        if st.button("▶ Próximo"):
+            if st.session_state.passo_atual < len(st.session_state.memoria_ia.get('passos', [])) - 1:
                 st.session_state.passo_atual += 1; st.rerun()
             else:
                 st.session_state.ecra = 3; st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ECRÃ 3: FINALIZAÇÃO (Conforme solicitado, tens 3 ecrãs)
+# --- ECRÃ 3: RESULTADO FINAL ---
 elif st.session_state.ecra == 3:
-    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712139.png", width=120)
+    st.markdown('<img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img">', unsafe_allow_html=True)
     play_voice("Siga a lógica e apresenta o resultado final")
-    res_aluno = st.text_input("Qual o resultado do teu exercício original (E1)?")
-    if st.button("Verificar"):
-        # Lógica de comparação e atribuição de 10 pontos
-        st.balloons()
-        st.success("Parabéns! Ganhaste 10 pontos!")
-
     
+    res_aluno = st.text_input("Insira o resultado obtido para o exercício E1:")
+    if st.button("Validar Resultado"):
+        with st.spinner("Analisando resultado..."):
+            time.sleep(2)
+            res_correto = str(st.session_state.memoria_ia.get('resultado_e1'))
+            if res_aluno.strip() == res_correto.strip():
+                play_voice("Parabéns acertou! Ganhou 10 pontos")
+                st.balloons()
+                st.success("Nota: 10 Pontos!")
+            else:
+                play_voice("Infelizmente não é assim, clica no Botão 2 para reiniciarmos o processo ou clica no botão 4 para recuar a explicação")
+                st.error("Resultado Incorreto.")
+    
+    if st.button("Voltar para Mediação"):
+        st.session_state.ecra = 2; st.rerun()
