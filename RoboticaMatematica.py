@@ -100,21 +100,21 @@ elif st.session_state.ecra == 2:
                     st.error("Erro: Certifica-te que o conteúdo é Matemática.")
 
     # Exibição dos Passos (Não apaga os anteriores)
-    if st.session_state.passo_atual >= 0:
-        passos = st.session_state.memoria_ia.get('passos', [])
-        for i in range(st.session_state.passo_atual + 1):
-            if i < len(passos):
-                p = passos[i]
-                st.markdown(f"### Passo {i+1}")
-                st.latex(p['expressao'])
-                st.write(p['explicacao'])
-                
-        # Dúvida sobre o passo atual
-        duvida = st.text_input(f"Dúvida sobre o Passo {st.session_state.passo_atual + 1}?", key=f"duvida_{st.session_state.passo_atual}")
-        if duvida:
-            if st.button("Explicar Dúvida"):
-                play_voice(f"Vou explicar novamente: {passos[st.session_state.passo_atual]['explicacao']}")
-
+    # REMOVER ISTO:
+if st.session_state.passo_atual >= 0:
+    passos = st.session_state.memoria_ia.get('passos', [])
+    for i in range(st.session_state.passo_atual + 1):
+        if i < len(passos):
+            p = passos[i]
+            st.markdown(f"### Passo {i+1}")
+            st.latex(p['expressao'])
+            st.write(p['explicacao'])
+            
+    duvida = st.text_input(f"Dúvida sobre o Passo {st.session_state.passo_atual + 1}?", key=f"duvida_{st.session_state.passo_atual}")
+    if duvida:
+        if st.button("Explicar Dúvida"):
+            play_voice(f"Vou explicar novamente: {passos[st.session_state.passo_atual]['explicacao']}")
+            
     # BOTÕES INFERIORES FIXOS
     st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -156,3 +156,4 @@ elif st.session_state.ecra == 3:
     
     if st.button("Voltar para Mediação"):
         st.session_state.ecra = 2; st.rerun()
+
