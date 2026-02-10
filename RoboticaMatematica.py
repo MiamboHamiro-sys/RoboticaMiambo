@@ -21,43 +21,45 @@ st.markdown("""
     
     .footer-fixed {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: white;
-        padding: 15px;
-        border-top: 3px solid #007bff;
-        z-index: 9999;
+        bottom: 0; left: 0; width: 100%;
+        background-color: white; padding: 15px;
+        border-top: 3px solid #007bff; z-index: 9999;
     }
     
-    .content-area { padding-bottom: 200px; }
+    .content-area { padding-bottom: 220px; }
     
     div.stButton > button {
-        width: 100%;
-        height: 60px;
-        font-weight: bold;
-        font-size: 14px;
-        white-space: nowrap;
+        width: 100%; height: 60px;
+        font-weight: bold; font-size: 14px;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # --- IA ---
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+try:
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+except:
+    st.error("Configure a GROQ_API_KEY no painel do Streamlit.")
 
 SYSTEM_PROMPT = """
-És o SmartProf, robô de Matemática.
+És o SmartProf. Atua APENAS em Matemática.
 REGRAS:
-1. NUNCA dês a solução de E1 nem expliques usando os dados de E1.
-2. Cria um ES1 similar e explica APENAS o ES1.
-3. Guarda o resultado de E1 em 'resultado_e1'.
-4. Retorna JSON: {"resultado_e1": "valor", "passos_es1": [{"math": "latex", "txt": "explicação"}]}
+1. NUNCA resolvas E1.
+2. Cria um ES1 (exercício similar) com valores diferentes.
+3. Resolve E1 internamente e guarda o valor em 'resultado_e1'.
+4. Retorna APENAS o JSON. Não fales nada fora do JSON.
+JSON FORMAT:
+{
+  "resultado_e1": "valor",
+  "passos_es1": [{"math": "latex", "txt": "explicação"}]
+}
 """
 
 def falar(texto):
     if texto:
         try:
-            limpo = re.sub(r'[\$\{\}\\]', '', texto).replace('*', ' vezes ')
+            # Limpa símbolos matemáticos para a voz soar natural
+            limpo = re.sub(r'[\$\{\}\\]', '', texto).replace('*', ' vezes ').replace('^2', ' ao quadrado')
             tts = gTTS(text=limpo, lang='pt', slow=False)
             fp = io.BytesIO()
             tts.write_to_fp(fp)
@@ -101,50 +103,53 @@ elif st.session_state.ecra == 2:
     if st.session_state.passo == -1:
         e1_input = st.text_area("Apresente o seu exercício E1:")
         if st.button("SUBMETER EXERCÍCIO"):
-            with st.spinner("A preparar ES1..."):
+            with st.spinner("O SmartProf está a analisar..."):
                 try:
                     res = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
                         messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": e1_input}],
                         response_format={"type": "json_object"}
                     )
-                    st.session_state.memoria = json.loads(res.choices[0].message.content)
+                    # Tentativa de carregar o JSON
+                    conteudo = res.choices[0].message.content
+                    st.session_state.memoria = json.loads(conteudo)
                     st.session_state.passo = 0
                     time.sleep(2)
                     falar("Não vou resolver o exercício que apresentaste, mas vou instruir-te a resolver siga os passos que se seguem")
                     st.rerun()
-                except: st.error("Erro na ligação.")
+                except Exception as e:
+                    st.error(f"Erro na ligação: Certifique-se que o conteúdo é matemática. Detalhe: {str(e)}")
     else:
         passos = st.session_state.memoria.get('passos_es1', [])
         for i in range(st.session_state.passo + 1):
             if i < len(passos):
-                st.subheader(f"Passo {i+1} (Exercício Similar)")
+                st.subheader(f"Passo {i+1} (Similiar)")
                 st.latex(passos[i]['math'])
                 st.write(passos[i]['txt'])
                 
-                # CAMPO DE DÚVIDA PARA O PASSO ATUAL
                 if i == st.session_state.passo:
-                    duvida_input = st.text_input(f"Tens alguma dúvida no Passo {i+1}? Escreve aqui:", key=f"duvida_input_{i}")
-                    if duvida_input:
-                        if st.button("ESCLARECER DÚVIDA", key=f"btn_duvida_{i}"):
-                            with st.spinner("O SmartProf está a preparar um esclarecimento claro..."):
-                                prompt_duvida = f"O aluno tem uma dúvida no passo '{passos[i]['txt']}' do exercício. A dúvida é: '{duvida_input}'. Esclareça com muita clareza usando apenas voz. Responda em JSON: {{'esclarecimento': 'texto_claro'}}"
-                                res_d = client.chat.completions.create(
+                    duv = st.text_input(f"Dúvida no Passo {i+1}?", key=f"d{i}")
+                    if duv:
+                        if st.button("ESCLARECER", key=f"b{i}"):
+                            with st.spinner("A gerar explicação clara..."):
+                                prompt_d = f"Explica com muita clareza este passo: {passos[i]['txt']}. O aluno tem esta dúvida: {duv}. Responde em JSON: {{'resp': 'texto'}}"
+                                r_d = client.chat.completions.create(
                                     model="llama-3.3-70b-versatile",
-                                    messages=[{"role": "system", "content": "És o SmartProf. Explica de forma clara e simples."}, {"role": "user", "content": prompt_duvida}],
+                                    messages=[{"role": "user", "content": prompt_d}],
                                     response_format={"type": "json_object"}
                                 )
-                                esclarecimento = json.loads(res_d.choices[0].message.content)['esclarecimento']
-                                falar(esclarecimento)
-                                st.info(f"🎙️ **Esclarecimento:** {esclarecimento}")
+                                expl = json.loads(r_d.choices[0].message.content)['resp']
+                                falar(expl)
+                                st.info(expl)
 
         if st.session_state.passo == len(passos) - 1:
             st.markdown("---")
             falar("siga a lógica e apresenta o resultado final")
-            res_aluno = st.text_input("Resultado do exercício E1:")
-            if st.button("VALIDAR RESULTADO"):
-                correto = str(st.session_state.memoria.get('resultado_e1')).lower().strip()
-                if res_aluno.lower().strip() == correto:
+            res_aluno = st.text_input("Apresenta o resultado final de E1:")
+            if st.button("VALIDAR"):
+                correto = str(st.session_state.memoria.get('resultado_e1', "")).lower().replace(" ","").replace("x=","")
+                aluno = res_aluno.lower().replace(" ","").replace("x=","")
+                if aluno == correto:
                     falar("parabéns acertou")
                     st.balloons()
                 else:
@@ -158,11 +163,12 @@ elif st.session_state.ecra == 2:
     with b1:
         if st.button("ECRÃ 1"): st.session_state.ecra = 1; st.rerun()
     with b2:
-        if st.button("REINICIAR"): st.session_state.passo = -1; st.rerun()
+        if st.button("LIMPAR"): st.session_state.passo = -1; st.rerun()
     with b3:
-        if st.button("RECUAR EXPL."): falar(st.session_state.memoria['passos_es1'][st.session_state.passo]['txt'])
+        if st.button("REPETIR"): 
+            if st.session_state.passo >= 0: falar(st.session_state.memoria['passos_es1'][st.session_state.passo]['txt'])
     with b4:
-        if st.button("RECUAR PASSO"):
+        if st.button("RECUAR"):
             if st.session_state.passo > 0: st.session_state.passo -= 1; st.rerun()
     with b5:
         if st.button("PRÓXIMO"):
@@ -171,3 +177,4 @@ elif st.session_state.ecra == 2:
                 falar(passos[st.session_state.passo]['txt'])
                 st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+
