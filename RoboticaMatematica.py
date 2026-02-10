@@ -7,174 +7,190 @@ import io
 import json
 import re
 
-# --- CONFIGURAÇÃO VISUAL ---
+# --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
+# CSS para Barra de Rolagem Grossa, Imagem 1/8 e Botões Alinhados no Rodapé
 st.markdown("""
     <style>
-    ::-webkit-scrollbar { width: 60px; }
+    /* Barra de rolagem muito grossa para precisão */
+    ::-webkit-scrollbar { width: 55px; }
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #007bff; border: 5px solid white; }
     
-    .robot-container { display: flex; justify-content: center; width: 100%; padding-top: 10px; }
-    .robot-img { width: 12.5%; min-width: 100px; }
-    
+    /* Imagem do Robô (1/8 da tela) */
+    .robot-container { display: flex; justify-content: center; width: 100%; padding: 10px; }
+    .robot-img { width: 12.5%; min-width: 110px; }
+
+    /* Rodapé Fixo e Botões em Linha (PC e Celular) */
     .footer-fixed {
         position: fixed;
-        bottom: 0; left: 0; width: 100%;
-        background-color: white; padding: 15px;
-        border-top: 3px solid #007bff; z-index: 9999;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #ffffff;
+        padding: 10px 5px;
+        border-top: 3px solid #007bff;
+        z-index: 9999;
+        display: flex;
+        justify-content: space-around;
     }
     
-    .content-area { padding-bottom: 220px; }
-    
+    /* Estilo dos botões do Streamlit dentro do rodapé */
     div.stButton > button {
-        width: 100%; height: 60px;
-        font-weight: bold; font-size: 14px;
+        width: 100%;
+        height: 55px;
+        font-size: 12px !important;
+        padding: 0px !important;
+        font-weight: bold;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
+
+    /* Ajuste para o conteúdo não sumir atrás do rodapé */
+    .main-content { padding-bottom: 180px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- IA ---
-try:
-    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-except:
-    st.error("Configure a GROQ_API_KEY no painel do Streamlit.")
+# --- INICIALIZAÇÃO DA IA ---
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-SYSTEM_PROMPT = """
-És o SmartProf. Atua APENAS em Matemática.
-REGRAS:
-1. NUNCA resolvas E1.
-2. Cria um ES1 (exercício similar) com valores diferentes.
-3. Resolve E1 internamente e guarda o valor em 'resultado_e1'.
-4. Retorna APENAS o JSON. Não fales nada fora do JSON.
-JSON FORMAT:
-{
-  "resultado_e1": "valor",
-  "passos_es1": [{"math": "latex", "txt": "explicação"}]
-}
-"""
-
-def falar(texto):
-    if texto:
+def play_voice(text):
+    """Gera áudio e força a reprodução compatível com Celulares"""
+    if text:
         try:
-            # Limpa símbolos matemáticos para a voz soar natural
-            limpo = re.sub(r'[\$\{\}\\]', '', texto).replace('*', ' vezes ').replace('^2', ' ao quadrado')
-            tts = gTTS(text=limpo, lang='pt', slow=False)
-            fp = io.BytesIO()
-            tts.write_to_fp(fp)
-            fp.seek(0)
-            b64 = base64.b64encode(fp.read()).decode()
-            st.markdown(f'<audio autoplay="true" src="data:audio/mp3;base64,{b64}">', unsafe_allow_html=True)
-        except: pass
+            # Limpeza didática para a voz
+            clean_text = re.sub(r'[\$\{\}\\]', '', text).replace('*', ' vezes ').replace('^', ' elevado a ')
+            tts = gTTS(text=clean_text, lang='pt', slow=False)
+            sound_file = io.BytesIO()
+            tts.write_to_fp(sound_file)
+            sound_file.seek(0)
+            b64 = base64.b64encode(sound_file.read()).decode()
+            
+            # HTML para autoplay compatível com navegadores móveis
+            audio_html = f"""
+                <audio autoplay>
+                    <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+                </audio>
+            """
+            st.markdown(audio_html, unsafe_allow_html=True)
+        except Exception as e:
+            st.error(f"Erro de áudio: {e}")
 
-# --- ESTADO ---
+# --- ESTADO GLOBAL ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
 if 'passo' not in st.session_state: st.session_state.passo = -1
 if 'memoria' not in st.session_state: st.session_state.memoria = {}
 if 'nome' not in st.session_state: st.session_state.nome = ""
 
-# --- ECRÃ 1 ---
+# --- ECRÃ 1: INICIAL ---
 if st.session_state.ecra == 1:
     st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
-    nome_in = st.text_input("Escreve o teu nome:", value=st.session_state.nome)
+    st.title("🤖 SmartProf")
+    st.session_state.nome = st.text_input("Olá Aluno! Digite seu nome:", value=st.session_state.nome)
     
+    # Rodapé do Ecrã 1
     st.markdown('<div class="footer-fixed">', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("SUBMETER NOME"):
-            if nome_in:
-                st.session_state.nome = nome_in
-                falar(f"{nome_in}, é um prazer contar consigo nesta jornada de discutirmos assuntos de Matemática")
-                with st.spinner("Processando..."): time.sleep(8)
+        if st.button("✅ SUBMETER"):
+            if st.session_state.nome:
+                play_voice(f"{st.session_state.nome}, é um prazer contar consigo nesta jornada de Matemática.")
+                with st.spinner("Iniciando..."): time.sleep(8)
                 st.session_state.ecra = 2
                 st.rerun()
     with c2:
-        if st.button("REINICIAR TUDO"):
+        if st.button("🔄 REINICIAR"):
             st.session_state.clear()
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
-# --- ECRÃ 2 ---
+# --- ECRÃ 2: MEDIAÇÃO ---
 elif st.session_state.ecra == 2:
     st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="content-area">', unsafe_allow_html=True)
+    st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
     if st.session_state.passo == -1:
         e1_input = st.text_area("Apresente o seu exercício E1:")
-        if st.button("SUBMETER EXERCÍCIO"):
-            with st.spinner("O SmartProf está a analisar..."):
+        if st.button("🚀 ANALISAR EXERCÍCIO"):
+            with st.spinner("O Robô está a criar um similar..."):
                 try:
-                    res = client.chat.completions.create(
+                    prompt = f"Crie um exercício similar a este: {e1_input}. Retorne JSON com 'resultado_e1' e 'passos_es1' (lista com 'math' e 'txt')."
+                    chat = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
-                        messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": e1_input}],
+                        messages=[{"role": "system", "content": "És o SmartProf. Responde APENAS JSON. Resolve E1 ocultamente."}, {"role": "user", "content": prompt}],
                         response_format={"type": "json_object"}
                     )
-                    # Tentativa de carregar o JSON
-                    conteudo = res.choices[0].message.content
-                    st.session_state.memoria = json.loads(conteudo)
+                    st.session_state.memoria = json.loads(chat.choices[0].message.content)
                     st.session_state.passo = 0
                     time.sleep(2)
-                    falar("Não vou resolver o exercício que apresentaste, mas vou instruir-te a resolver siga os passos que se seguem")
+                    play_voice("Não vou resolver o exercício que apresentaste, mas vou instruir-te a resolver. Siga os passos.")
                     st.rerun()
-                except Exception as e:
-                    st.error(f"Erro na ligação: Certifique-se que o conteúdo é matemática. Detalhe: {str(e)}")
+                except: st.error("Erro na conexão com IA.")
     else:
+        # Exibição dos passos ES1
         passos = st.session_state.memoria.get('passos_es1', [])
         for i in range(st.session_state.passo + 1):
             if i < len(passos):
-                st.subheader(f"Passo {i+1} (Similiar)")
+                st.markdown(f"### Passo {i+1}")
                 st.latex(passos[i]['math'])
                 st.write(passos[i]['txt'])
                 
                 if i == st.session_state.passo:
-                    duv = st.text_input(f"Dúvida no Passo {i+1}?", key=f"d{i}")
-                    if duv:
-                        if st.button("ESCLARECER", key=f"b{i}"):
-                            with st.spinner("A gerar explicação clara..."):
-                                prompt_d = f"Explica com muita clareza este passo: {passos[i]['txt']}. O aluno tem esta dúvida: {duv}. Responde em JSON: {{'resp': 'texto'}}"
-                                r_d = client.chat.completions.create(
-                                    model="llama-3.3-70b-versatile",
-                                    messages=[{"role": "user", "content": prompt_d}],
-                                    response_format={"type": "json_object"}
-                                )
-                                expl = json.loads(r_d.choices[0].message.content)['resp']
-                                falar(expl)
-                                st.info(expl)
+                    duvida = st.text_input(f"Dúvida no Passo {i+1}?", key=f"d{i}")
+                    if duvida:
+                        if st.button("❓ ESCLARECER"):
+                            prompt_d = f"Explique de forma muito clara este passo: {passos[i]['txt']}. O aluno pergunta: {duvida}."
+                            resp_d = client.chat.completions.create(
+                                model="llama-3.3-70b-versatile",
+                                messages=[{"role": "user", "content": prompt_d}]
+                            )
+                            texto_d = resp_d.choices[0].message.content
+                            play_voice(texto_d)
+                            st.info(texto_d)
 
+        # Validação Final
         if st.session_state.passo == len(passos) - 1:
             st.markdown("---")
-            falar("siga a lógica e apresenta o resultado final")
-            res_aluno = st.text_input("Apresenta o resultado final de E1:")
-            if st.button("VALIDAR"):
-                correto = str(st.session_state.memoria.get('resultado_e1', "")).lower().replace(" ","").replace("x=","")
-                aluno = res_aluno.lower().replace(" ","").replace("x=","")
-                if aluno == correto:
-                    falar("parabéns acertou")
+            play_voice("Siga a lógica e apresenta o resultado final.")
+            res_aluno = st.text_input("Qual o resultado de E1?")
+            if st.button("🏆 VALIDAR"):
+                correto = str(st.session_state.memoria.get('resultado_e1')).lower().strip()
+                if res_aluno.lower().strip() in correto:
+                    play_voice("Parabéns acertou! Recebeste 10 pontos.")
                     st.balloons()
                 else:
-                    falar("Infelizmente não é assim, clica no Botão 2 para reiniciarmos ou Botão 4 para recuar")
+                    play_voice("Infelizmente não é assim. Reinicie ou recue o passo.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # BOTÕES INFERIORES
+    # RODAPÉ FIXO COM 5 BOTÕES (PC E CELULAR)
     st.markdown('<div class="footer-fixed">', unsafe_allow_html=True)
     b1, b2, b3, b4, b5 = st.columns(5)
     with b1:
-        if st.button("ECRÃ 1"): st.session_state.ecra = 1; st.rerun()
+        if st.button("🏠\nInício"): 
+            st.session_state.ecra = 1
+            st.rerun()
     with b2:
-        if st.button("LIMPAR"): st.session_state.passo = -1; st.rerun()
+        if st.button("🗑️\nLimpar"): 
+            st.session_state.passo = -1
+            st.rerun()
     with b3:
-        if st.button("REPETIR"): 
-            if st.session_state.passo >= 0: falar(st.session_state.memoria['passos_es1'][st.session_state.passo]['txt'])
+        if st.button("🔊\nVoz"): 
+            if st.session_state.passo >= 0:
+                play_voice(st.session_state.memoria['passos_es1'][st.session_state.passo]['txt'])
     with b4:
-        if st.button("RECUAR"):
-            if st.session_state.passo > 0: st.session_state.passo -= 1; st.rerun()
+        if st.button("◀\nRecuar"):
+            if st.session_state.passo > 0:
+                st.session_state.passo -= 1
+                st.rerun()
     with b5:
-        if st.button("PRÓXIMO"):
-            if st.session_state.passo < len(passos) - 1:
+        if st.button("▶\nPróximo"):
+            if st.session_state.passo < len(st.session_state.memoria.get('passos_es1', [])) - 1:
                 st.session_state.passo += 1
-                falar(passos[st.session_state.passo]['txt'])
+                play_voice(st.session_state.memoria['passos_es1'][st.session_state.passo]['txt'])
                 st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
-
