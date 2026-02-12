@@ -23,7 +23,7 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS REFINADO ---
+# --- CSS REFINADO (BOTÕES EM TABELA HORIZONTAL) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -37,73 +37,63 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Estilo Geral */
-    * {{
-        font-family: 'Poppins', sans-serif;
-        color: #1A237E !important;
-    }}
-
     /* Esconder elementos nativos */
     [data-testid="stHeader"], [data-testid="stToolbar"] {{
         display: none !important;
     }}
 
-    /* Container do Input de Nome - CORREÇÃO DE CORTE */
+    /* CAMPO DE NOME: Aumento de altura para não cortar (Ana) */
     .stTextInput > div > div > input {{
         background-color: rgba(255, 255, 255, 0.95) !important;
         border: 4px solid #1A237E !important;
         border-radius: 25px !important;
-        height: 90px !important; /* Aumentado para não cortar o texto */
-        font-size: 32px !important; /* Fonte grande e visível */
+        height: 100px !important; 
+        font-size: 35px !important;
         text-align: center !important;
-        padding: 10px !important;
-        line-height: 1.5 !important;
+        color: #1A237E !important;
+        padding: 15px !important;
+        font-family: 'Poppins', sans-serif !important;
     }}
 
-    /* Centralização do Campo */
-    .input-container {{
-        margin-top: 35vh;
-        display: flex;
-        justify-content: center;
-        padding: 0 10%;
+    /* Forçar centralização do container do input */
+    .stTextInput {{
+        margin-top: 30vh;
+        padding: 0 5% !important;
     }}
 
-    /* Rodapé Fixo Horizontal - BOTÕES LADO A LADO */
-    .footer-buttons {{
-        position: fixed;
-        bottom: 40px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        padding: 0 20px;
-        z-index: 1000;
+    /* ESTRUTURA DE TABELA/FLEX PARA BOTÕES (IMPEDE COLUNA NO CELULAR) */
+    [data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        flex-direction: row !important; /* Força linha sempre */
+        flex-wrap: nowrap !important; /* Impede quebra para coluna */
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 10px !important;
+        position: fixed !important;
+        bottom: 50px !important;
+        left: 0 !important;
+        width: 100% !important;
+        padding: 0 10px !important;
+        z-index: 1000 !important;
     }}
 
-    /* Botões Padronizados */
+    /* Estilização dos Botões */
     .stButton > button {{
-        width: 160px !important;
+        width: 100% !important; /* Ocupa a 'célula' da coluna */
+        min-width: 140px !important;
         height: 65px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
-        border-radius: 20px !important;
-        font-size: 18px !important;
+        border-radius: 18px !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        transition: 0.3s;
+        color: #1A237E !important;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
     }}
 
     .stButton > button:hover {{
         background-color: #1A237E !important;
         color: white !important;
-    }}
-
-    /* Ecrã 2: Limpeza */
-    .white-bg {{
-        background-color: white !important;
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: -2;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -132,30 +122,28 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Campo de Nome (Ajustado para o centro)
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve aqui a tua questão...", label_visibility="collapsed")
 
-    # Botões na Horizontal
-    st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
+    # Botões em Colunas (Simulando Tabela Linha 1: Cel1 e Cel2)
+    # O CSS acima garante que estas colunas fiquem sempre lado a lado no celular
     c1, c2 = st.columns(2)
-    with c1:
-        if st.button("↑ SUBMETER"):
+    
+    with c1: # Linha 1, Coluna 1
+        if st.button("SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
-    with c2:
-        if st.button("🗑 LIMPAR"):
+
+    with c2: # Linha 1, Coluna 2
+        if st.button("LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
-    st.markdown('<div class="white-bg"></div>', unsafe_allow_html=True)
-    st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; }</style>', unsafe_allow_html=True)
-
+    st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white; }</style>', unsafe_allow_html=True)
     st.markdown(f"<h1 style='text-align:center;'>SmartProf</h1>", unsafe_allow_html=True)
     
     if st.session_state.passo == -1:
@@ -163,11 +151,10 @@ elif st.session_state.ecra == 2:
         e1_input = st.text_area("", placeholder="Escreve aqui a tua questão...", height=150)
         
         if st.button("🚀 ANALISAR"):
-            play_voice("Deixa-me ajudar-te com isso.")
+            play_voice("Muito bem, vou ajudar-te.")
             st.session_state.passo = 0
             st.rerun()
     else:
-        st.success("Resolução pronta!")
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
