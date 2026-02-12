@@ -13,7 +13,7 @@ st.set_page_config(page_title="SmartProf", layout="wide")
 
 # URL da imagem do robô (corpo inteiro)
 # Se preferir usar uma imagem local, coloque o caminho do ficheiro aqui
-IMAGE_URL = "https://img.cdndsgni.com/preview/11038919.jpg"
+IMAGE_URL = "https://drive.google.com/drive/u/0/folders/1hm0UGjau39V6_lqXtgrZTvJrXsEBa-TC"
 
 def get_base64_img(url):
     """Converte a imagem para Base64 para garantir que renderiza no APK"""
@@ -151,4 +151,5 @@ elif st.session_state.ecra == 2:
                 if i == 0: st.session_state.ecra = 1; st.rerun()
                 if i == 1: st.session_state.passo = -1; st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+
 
