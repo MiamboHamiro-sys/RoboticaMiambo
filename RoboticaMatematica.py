@@ -95,13 +95,12 @@ st.markdown(f"""
     }}
 
     /* TABELA DE BOTÕES (LADO A LADO) */
-    [data-testid="stHorizontalBlock"] {{
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 5px !important;
-        margin-top: 20px !important;
-        padding: 0 10% !important;
+    [data-testid="stHorizontalBlock"] {{ display: flex !important; 
+        flex-direction: row !important; 
+        flex-wrap: nowrap !important; 
+        gap: 5px !important; margin-top: 
+        20px !important; padding: 0 10% !important;
+        width: 80% !important;
     }}
 
     .stButton > button {{
@@ -161,5 +160,6 @@ elif st.session_state.ecra == 2:
     if st.button("Voltar ao Ecrã 1"):
         st.session_state.ecra = 1
         st.rerun()
+
 
 
