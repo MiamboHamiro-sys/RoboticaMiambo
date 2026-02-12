@@ -13,7 +13,7 @@ st.set_page_config(page_title="SmartProf", layout="wide")
 
 # URL da imagem do robô (corpo inteiro)
 # Se preferir usar uma imagem local, coloque o caminho do ficheiro aqui
-IMAGE_URL = "https://drive.google.com/drive/u/0/folders/1hm0UGjau39V6_lqXtgrZTvJrXsEBa-TC"
+IMAGE_URL = "https://lh3.googleusercontent.com/rd-gg-dl/AOI_d_9L6T8CaOZLqNLCqlg9ZA4xlvoREMTqBHT09N135VER9SM4bLkFBNT_lugruM6x93q_CR-rd_neeu2cTaBl1y-is93pgiyb-TkoSrJWyny1FJYiAaULN8n18EtxpwaYSatobghIwObxs7luRLBRRufNcbJQRRXsSGkTjUYhIyJBHvJZ3vuipYlwk1SlLuF0O8pIHvenFLrlJj_mxcusBDsE6Op-MC9yZB_9ldMln-6wWoqr7VgNgVFtt0qtbUuKVVxGpeX6rEDw3l-YFfiB8_7HdmiRhgkhMmG9nd_HTORJHsAj8-LTP2Jn00ZhXDky-HNRosT1WdfWGTGesz6cTndbTuJN6LySWlP8u9O9GkV3GkyDiVUcfxRR2d3w3wVXlkYXIElV3ziSGx9EXbS9pl3mD6_GHesbVAOCCx_Xt7bYXI5SOr6UsxaxpwzInT3ZHk6wk30pT0ak2HMxcD6p4lfBmKEHSQVO05I7QCkw40P7uaS_9g_FCOVy_3rPazFdYGhH52nHzYIC761M0Nh5TqLGjIRnvdK1hnzVmh9eMrtqfw9U9uOiZxB4iblHihLMFlpOA-SpdE7Hm71cnNJZ7CVE-XjAe2QDd_A0VsSIqVuV3kY3EJhdo1etTXQ73ZROphTQMgCXEwYGVHRQCyqGoKixwGNOJSorSwr7BoLP9WYhWWSNR5XYq6BapLUiuQLOsj33M6EEOug5bqi9FtRl2f8UIsJEympCjmrrhoe20FwtYMK_bJN5SfU1u2bl6jzP5vAUl0uirXO8RLnQ7YDbblYRFUqsfq-Z8VfLmgO_lm0uY6JUEajBx-2xTdQp48JkExNpAXrTrR5of4Ui4zjrE2sRp40ob2ygtzbMIxdR1wnAxsAvq_ExHKnYYxGIEglV5SG0KYRwapMq3YDYYYfn6Zn152JuafuIPzql5qLxhOzDgDuh--9q-1mxDI6b8wDk1-Scl42DhCb0YPvSa9aXczsWYU0pg3wrA2Gx8tuaegUNQYRZlT0ktVqhHJ8naOr1F0SDb8QEmdGVY3hAZvIE5LCM_zt9pLKu82lfl7bGLJO3VAkZMx6YjMsWPMsQ992Cuix_2JoaVYLD28ulgTvS4HTTy7JyZlM9uBIEHE6SZg1sa69Qjhh1UNV_dS7Rb9PXMvLGYJpMYBhv5DDvfDQeOyHd2VRDsReDprjnnbv1dpxv_lWZ2PZWxeQ=s1024-rj"
 
 def get_base64_img(url):
     """Converte a imagem para Base64 para garantir que renderiza no APK"""
@@ -151,5 +151,6 @@ elif st.session_state.ecra == 2:
                 if i == 0: st.session_state.ecra = 1; st.rerun()
                 if i == 1: st.session_state.passo = -1; st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
