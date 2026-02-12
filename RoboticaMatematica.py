@@ -8,6 +8,9 @@ import json
 import re
 import requests
 
+# --- CONEXÃO SEGURA COM A API ---
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
@@ -179,10 +182,10 @@ elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: #F8F9FA !important; }</style>', unsafe_allow_html=True)
     
     # Topo Fixo conforme solicitado
-    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a)! {st.session_state.nome}! Sou o Robô ProfSmart.</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a)! Sou o {st.session_state.nome}! Sou o Robô ProfSmart.</h2>", unsafe_allow_html=True)
     
     # Botão que Reinicia a conversa (Limpa tudo)
-    if st.button("Limpar"):
+    if st.button("🔄 Reiniciar e Limpar Tudo"):
         st.session_state.mensagens = []
         st.session_state.memoria_oculta = None
         st.session_state.exercicio_pendente = False
@@ -233,4 +236,3 @@ elif st.session_state.ecra == 2:
     if st.sidebar.button("Voltar ao Início"):
         st.session_state.ecra = 1
         st.rerun()
-
