@@ -11,11 +11,10 @@ import requests
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-# URL da imagem do robô (corpo inteiro)
-# Imagem local com o respectivo o caminho, do ficheiro a seguir
-IMAGE_URL = "https://thumbs.dreamstime.com/b/professor-de-rob%C3%B4-moderno-na-faculdade-gradua%C3%A7%C3%A3o-que-mant%C3%A9m-o-conceito-intelig%C3%AAncia-artificial-para-laptops-online-robot-pac-218181889.jpg?w=576"
+# URL da imagem do robô (Corpo Inteiro - Imagem 2 do anexo)
+IMAGE_URL = "https://raw.githubusercontent.com/filipe-md/images/main/robot_full_body.png"
+
 def get_base64_img(url):
-    """Converte a imagem para Base64 para garantir renderização total"""
     try:
         response = requests.get(url)
         return base64.b64encode(response.content).decode()
@@ -24,10 +23,12 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS PERSONALIZADO ---
+# --- CSS PERSONALIZADO (Fontes, Cores e Botão de Seta) ---
 st.markdown(f"""
     <style>
-    /* Fundo do Robô Ocupando Toda a Tela */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+    /* Fundo do Robô */
     [data-testid="stAppViewContainer"] {{
         background-image: url("data:image/png;base64,{img_data}");
         background-size: cover;
@@ -36,39 +37,44 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Container de Vidro para Input do Nome */
-    .main-card {{
-        background: rgba(255, 255, 255, 0.88);
-        backdrop-filter: blur(8px);
-        padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        max-width: 450px;
-        margin: 15% auto;
+    /* Estilo Geral do Texto */
+    * {{
+        font-family: 'Poppins', sans-serif;
+        color: #1A237E; /* Azul Marinho Profundo */
+    }}
+
+    /* Container Central */
+    .glass-card {{
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 50px;
+        border-radius: 30px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        max-width: 500px;
+        margin: 10% auto;
         text-align: center;
+        border: 2px solid #1A237E;
     }}
 
-    /* Estilização do Título e Input */
-    h1 {{ color: #1E88E5; font-family: 'Arial', sans-serif; }}
-    
-    /* Rodapé Fixo para Botões do Ecrã 1 */
-    .footer-ecra1 {{
-        position: fixed;
-        bottom: 50px; left: 0; width: 100%;
-        display: flex; justify-content: center; gap: 20px;
-        z-index: 999;
+    /* Customização do Input de Nome */
+    .stTextInput input {{
+        border: 2px solid #1A237E !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        font-size: 18px !important;
     }}
 
-    /* Botão em formato de seta (Submit) e Limpar */
-    .stButton > button {{
-        border-radius: 50px !important;
-        height: 60px !important;
-        width: 150px !important;
-        font-weight: bold !important;
+    /* Botão de Seta (Estilo imagem anexa) */
+    .submit-container {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin-top: 20px;
     }}
-    
-    /* Ecrã 2: Fundo Branco para estudo */
-    .white-bg-active {{
+
+    /* Ecrã 2: Limpeza do fundo */
+    .white-bg {{
         background-color: white !important;
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         z-index: -2;
@@ -80,7 +86,7 @@ st.markdown(f"""
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def play_voice(text):
-    """Gera áudio apenas para o Ecrã 2 conforme solicitado"""
+    """Áudio reservado apenas para o Ecrã 2"""
     if text:
         try:
             clean_text = re.sub(r'[\$\{\}\\]', '', text).replace('*', ' vezes ').replace('^', ' elevado a ')
@@ -93,48 +99,54 @@ def play_voice(text):
             st.components.v1.html(audio_html, height=0)
         except: pass
 
-# --- ESTADO DA SESSÃO ---
+# --- ESTADO ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
 if 'passo' not in st.session_state: st.session_state.passo = -1
 if 'memoria' not in st.session_state: st.session_state.memoria = {}
 if 'nome' not in st.session_state: st.session_state.nome = ""
 
-# --- ECRÃ 1: INICIAL ---
+# --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="main-card">', unsafe_allow_html=True)
-    st.markdown("<h1>SmartProf</h1>", unsafe_allow_html=True)
-    nome_input = st.text_input("Qual o teu nome?", value=st.session_state.nome, placeholder="Digite aqui...")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Botões centralizados: Seta para Avançar e Limpar
-    col_l, col_r = st.columns([1, 1])
-    with col_l:
-        if st.button("➡ SUBMETER"):
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #1A237E; margin-bottom:30px;'>SmartProf</h1>", unsafe_allow_html=True)
+    
+    nome_input = st.text_input("Olá! Qual o teu nome?", value=st.session_state.nome, placeholder="Escreve aqui o teu nome...")
+    
+    st.markdown('<div class="submit-container">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        # Botão de Seta conforme Imagem 4
+        if st.button("↑", help="Submeter Nome"):
             if nome_input:
                 st.session_state.nome = nome_input
-                # Som removido deste ecrã conforme solicitado
                 st.session_state.ecra = 2
                 st.rerun()
-    with col_r:
-        if st.button("🗑 LIMPAR"):
+    with col2:
+        if st.button("🗑️", help="Limpar Nome"):
             st.session_state.nome = ""
             st.rerun()
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
-    # Remove o fundo do robô e aplica fundo branco
-    st.markdown('<div class="white-bg-active"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="white-bg"></div>', unsafe_allow_html=True)
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; }</style>', unsafe_allow_html=True)
 
-    st.title(f"Bem-vindo, {st.session_state.nome}!")
-    
+    st.markdown(f"<h2 style='text-align:center;'>Vamos trabalhar, {st.session_state.nome}!</h2>", unsafe_allow_html=True)
+
     if st.session_state.passo == -1:
-        e1_input = st.text_area("Insira o seu exercício de Matemática (E1):")
-        if st.button("🚀 INICIAR EXPLICAÇÃO"):
-            # Lógica Groq para gerar passos (Mantida do código original)
-            play_voice("Vamos começar a resolver o seu exercício.")
+        # Input de questão matemática conforme Imagem 4
+        st.markdown("### Apresente a sua questão matemática...")
+        e1_input = st.text_area("", placeholder="Escreve aqui a tua dúvida...", height=150)
+        
+        if st.button("🚀 ANALISAR QUESTÃO"):
+            # Lógica Groq mantida
+            play_voice("Muito bem, deixa-me analisar esse problema para te ajudar.")
             st.session_state.passo = 0
             st.rerun()
     else:
-        st.info("Aqui aparecerão os passos da resolução...")
-        # Adicione aqui o loop de exibição dos passos do código anterior
+        st.write("---")
+        st.info("Passos da resolução serão exibidos aqui.")
+        if st.button("🏠 VOLTAR"):
+            st.session_state.ecra = 1
+            st.rerun()
