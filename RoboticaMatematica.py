@@ -96,26 +96,25 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    # Campo de Nome
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve o teu nome aqui", label_visibility="collapsed")
-
-    # Criando a "Tabela" com st.columns mas sem fixar no fundo (para não sumir)
-    st.markdown('<div class="button-row">', unsafe_allow_html=True)
-    c1, c2 = st.columns([1, 1])
+    st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
+    nome_in = st.text_input("Escreve o teu nome:", value=st.session_state.nome)
     
+    st.markdown('<div class="footer-fixed">', unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
     with c1:
-        if st.button("↑ SUBMETER"):
-            if nome_input:
-                st.session_state.nome = nome_input
+        if st.button("SUBMETER NOME"):
+            if nome_in:
+                st.session_state.nome = nome_in
+                falar(f"{nome_in}, é um prazer contar consigo nesta jornada de discutirmos assuntos de Matemática")
+                with st.spinner("Processando..."): time.sleep(8)
                 st.session_state.ecra = 2
                 st.rerun()
-
     with c2:
-        if st.button("🗑 LIMPAR"):
-            st.session_state.nome = ""
+        if st.button("REINICIAR TUDO"):
+            st.session_state.clear()
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
-
+    
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white; }</style>', unsafe_allow_html=True)
@@ -123,5 +122,6 @@ elif st.session_state.ecra == 2:
     if st.button("🏠 VOLTAR"):
         st.session_state.ecra = 1
         st.rerun()
+
 
 
