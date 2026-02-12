@@ -11,7 +11,7 @@ import requests
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-# URL da imagem de fundo do Robô
+# Imagem de fundo solicitada
 IMAGE_URL = "https://thumbs.dreamstime.com/b/professor-de-rob%C3%B4-moderno-na-faculdade-gradua%C3%A7%C3%A3o-que-mant%C3%A9m-o-conceito-intelig%C3%AAncia-artificial-para-laptops-online-robot-pac-218181889.jpg?w=576"
 
 def get_base64_img(url):
@@ -23,13 +23,13 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS PERSONALIZADO ---
+# --- CSS PARA FORÇAR TABELA HORIZONTAL (LINHA 1, COL 1 E 2) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* Fundo Estável no Ecrã 1 */
-    .stApp {{
+    /* Fundo Estável */
+    [data-testid="stAppViewContainer"] {{
         background-image: url("data:image/png;base64,{img_data}");
         background-size: cover;
         background-position: center;
@@ -37,63 +37,50 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Estilo Geral */
-    * {{ font-family: 'Poppins', sans-serif; }}
-
-    /* Esconder Header e Toolbar */
+    /* Esconder elementos nativos */
     [data-testid="stHeader"], [data-testid="stToolbar"] {{ display: none !important; }}
 
-    /* Centralização e Estilo do Input */
-    .input-container {{
-        margin-top: 30vh;
-        display: flex;
-        justify-content: center;
-        padding: 0 10%;
-    }}
-
+    /* Input de Nome - Ajuste para não cortar texto */
     .stTextInput > div > div > input {{
-        background-color: rgba(255, 255, 255, 0.9) !important;
-        border: 3px solid #1A237E !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border: 4px solid #1A237E !important;
         border-radius: 15px !important;
-        height: 70px !important;
-        font-size: 24px !important;
+        height: 80px !important;
+        font-size: 28px !important;
         text-align: center !important;
         color: #1A237E !important;
+        font-family: 'Poppins', sans-serif !important;
     }}
 
-    /* Forçar Botões na Mesma Linha (Comportamento de Tabela/Flexbox) */
+    .stTextInput {{ margin-top: 25vh !important; }}
+
+    /* ESTRUTURA DE TABELA PARA OS BOTÕES (LADO A LADO) */
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        flex-direction: row !important; /* Força horizontal */
+        flex-wrap: nowrap !important; /* Impede que o botão suma ou desça */
         justify-content: center !important;
         align-items: center !important;
         gap: 10px !important;
-        margin-top: 20px !important;
+        margin-top: 30px !important;
     }}
 
+    /* Estilo dos Botões (Células da Tabela) */
     .stButton > button {{
         width: 100% !important;
-        height: 60px !important;
+        height: 65px !important;
         background-color: white !important;
-        border: 2px solid #1A237E !important;
+        border: 4px solid #1A237E !important; /* Borda forte para ver a 'célula' */
         border-radius: 12px !important;
         color: #1A237E !important;
         font-weight: bold !important;
         font-size: 18px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }}
 
     .stButton > button:hover {{
         background-color: #1A237E !important;
         color: white !important;
-    }}
-
-    /* Ecrã 2: Fundo Limpo */
-    .white-bg {{
-        background-color: white !important;
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        z-index: -1;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -116,35 +103,32 @@ def play_voice(text):
 
 # --- ESTADO ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
-if 'passo_atual' not in st.session_state: st.session_state.passo_atual = -1
-if 'memoria_ia' not in st.session_state: st.session_state.memoria_ia = {}
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    # Campo de Nome Centralizado
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    nome = st.text_input("", value=st.session_state.get('nome', ""), placeholder="TEU NOME", label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Campo de Nome
+    nome = st.text_input("", value=st.session_state.get('nome', ""), placeholder="ESCREVA O SEU NOME", label_visibility="collapsed")
 
-    # Botões Lado a Lado (Linha 1: Coluna 1 e Coluna 2)
-    c1, c2 = st.columns(2)
-    with c1:
+    # TABELA DE BOTÕES: Linha 1
+    col1, col2 = st.columns(2)
+    
+    with col1: # Célula 1 (L1C1)
         if st.button("SUBMETER"):
             if nome:
                 st.session_state.nome = nome
-                play_voice(f"{nome}, é um prazer contar contigo nesta jornada.")
+                play_voice(f"{nome}, vamos começar!")
                 st.session_state.ecra = 2
                 st.rerun()
-    with c2:
+    
+    with col2: # Célula 2 (L1C2)
         if st.button("LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
-    st.markdown('<div class="white-bg"></div>', unsafe_allow_html=True)
-    # Mantém a lógica original do seu Ecrã 2 a partir daqui...
-    st.title(f"Olá, {st.session_state.nome}!")
-    if st.button("Voltar"):
+    st.markdown('<style> .stApp { background-image: none !important; background-color: white !important; } </style>', unsafe_allow_html=True)
+    st.title(f"Bem-vindo, {st.session_state.nome}!")
+    if st.button("Voltar ao Ecrã 1"):
         st.session_state.ecra = 1
         st.rerun()
