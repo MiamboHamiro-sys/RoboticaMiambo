@@ -130,30 +130,26 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    # Apenas o campo de Nome
-    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown("<h1 style='color: #212121; margin-bottom:30px;'>SmartProf</h1>", unsafe_allow_html=True)
     
     nome_input = st.text_input("Olá! Qual o teu nome?", value=st.session_state.nome, placeholder="Escreve aqui o teu nome...")
-   st.markdown('<div class="submit-container">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-
-    # Botões na parte inferior
-    st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
     
+    st.markdown('<div class="submit-container">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
     with col1:
-        if st.button("↑ SUBMETER"):
+        # Botão de Seta conforme Imagem 4
+        if st.button("↑", help="Submeter Nome"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
-
     with col2:
-        if st.button("🗑 LIMPAR"):
+        if st.button("🗑️", help="Limpar Nome"):
             st.session_state.nome = ""
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div></div>', unsafe_allow_html=True)
+    ##########
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
@@ -176,5 +172,6 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
 
 
