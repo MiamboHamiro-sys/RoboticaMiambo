@@ -80,8 +80,8 @@ st.markdown(f"""
     /* Estilização dos Botões */
     .stButton > button {{
         width: 100% !important; /* Ocupa a 'célula' da coluna */
-        min-width: 140px !important;
-        height: 65px !important;
+        min-width: 118px !important;
+        height: 50px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
         border-radius: 18px !important;
@@ -158,3 +158,4 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
