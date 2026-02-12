@@ -12,7 +12,7 @@ import requests
 st.set_page_config(page_title="SmartProf", layout="wide")
 
 # URL da imagem do robô de corpo inteiro
-IMAGE_URL = "https://raw.githubusercontent.com/filipe-md/images/main/robot_full_body.png"
+IMAGE_URL = "https://thumbs.dreamstime.com/b/professor-de-rob%C3%B4-moderno-na-faculdade-gradua%C3%A7%C3%A3o-que-mant%C3%A9m-o-conceito-intelig%C3%AAncia-artificial-para-laptops-online-robot-pac-218181889.jpg?w=576"
 
 def get_base64_img(url):
     try:
@@ -173,3 +173,4 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
