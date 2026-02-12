@@ -11,8 +11,8 @@ import requests
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-# URL da imagem do robô (Corpo Inteiro)
-IMAGE_URL = "https://thumbs.dreamstime.com/b/professor-de-rob%C3%B4-moderno-na-faculdade-gradua%C3%A7%C3%A3o-que-mant%C3%A9m-o-conceito-intelig%C3%AAncia-artificial-para-laptops-online-robot-pac-218181889.jpg?w=576"
+# URL da imagem do robô de corpo inteiro
+IMAGE_URL = "https://raw.githubusercontent.com/filipe-md/images/main/robot_full_body.png"
 
 def get_base64_img(url):
     try:
@@ -130,26 +130,27 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("<h1 style='color: #212121; margin-bottom:30px;'>SmartProf</h1>", unsafe_allow_html=True)
+    # Apenas o campo de Nome
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Botões na parte inferior
+    st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
     
-    nome_input = st.text_input("Olá! Qual o teu nome?", value=st.session_state.nome, placeholder="Escreve aqui o teu nome...")
-    
-    st.markdown('<div class="submit-container">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
     with col1:
-        # Botão de Seta conforme Imagem 4
-        if st.button("↑", help="Submeter Nome"):
+        if st.button("↑ SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
+
     with col2:
-        if st.button("🗑️", help="Limpar Nome"):
+        if st.button("🗑 LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
-    st.markdown('</div></div>', unsafe_allow_html=True)
-    ##########
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
@@ -172,6 +173,3 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
-
-
-
