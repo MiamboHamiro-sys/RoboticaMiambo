@@ -23,7 +23,7 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS REFINADO (BOTÕES EM TABELA HORIZONTAL) ---
+# --- CSS REFINADO (FOCO NA VISIBILIDADE DOS BOTÕES) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -38,57 +38,49 @@ st.markdown(f"""
     }}
 
     /* Esconder elementos nativos */
-    [data-testid="stHeader"], [data-testid="stToolbar"] {{
+    [data-testid="stHeader"], [data-testid="stToolbar"], [data-testid="stSidebarNav"] {{
         display: none !important;
     }}
 
-    /* CAMPO DE NOME: Aumento de altura para não cortar (Ana) */
+    /* CAMPO DE NOME: Altura máxima para evitar cortes */
     .stTextInput > div > div > input {{
         background-color: rgba(255, 255, 255, 0.95) !important;
         border: 4px solid #1A237E !important;
-        border-radius: 25px !important;
+        border-radius: 20px !important;
         height: 100px !important; 
         font-size: 35px !important;
         text-align: center !important;
         color: #1A237E !important;
-        padding: 15px !important;
-        font-family: 'Poppins', sans-serif !important;
+        font-weight: 600 !important;
     }}
 
-    /* Forçar centralização do container do input */
     .stTextInput {{
-        margin-top: 30vh;
-        padding: 0 5% !important;
+        margin-top: 25vh !important;
+        padding: 0 10% !important;
     }}
 
-    /* ESTRUTURA DE TABELA/FLEX PARA BOTÕES (IMPEDE COLUNA NO CELULAR) */
-    [data-testid="stHorizontalBlock"] {{
+    /* CONTAINER PARA BOTÕES (Simulando Tabela) */
+    .button-row {{
         display: flex !important;
-        flex-direction: row !important; /* Força linha sempre */
-        flex-wrap: nowrap !important; /* Impede quebra para coluna */
+        flex-direction: row !important;
         justify-content: center !important;
-        align-items: center !important;
-        gap: 10px !important;
-        position: fixed !important;
-        bottom: 50px !important;
-        left: 0 !important;
+        gap: 15px !important;
         width: 100% !important;
-        padding: 0 10px !important;
-        z-index: 1000 !important;
+        margin-top: 30px !important;
+        padding-bottom: 100px; /* Garante que não suma no celular */
     }}
 
-    /* Estilização dos Botões */
+    /* Estilo dos Botões do Streamlit */
     .stButton > button {{
-        width: 100% !important; /* Ocupa a 'célula' da coluna */
-        min-width: 118px !important;
+        width: 118px !important; /* Tamanho fixo para ambos */
         height: 50px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
-        border-radius: 18px !important;
+        border-radius: 15px !important;
         font-size: 16px !important;
         font-weight: 700 !important;
         color: #1A237E !important;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }}
 
     .stButton > button:hover {{
@@ -98,64 +90,36 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- INICIALIZAÇÃO DA IA ---
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-def play_voice(text):
-    if text:
-        try:
-            clean_text = re.sub(r'[\$\{\}\\]', '', text).replace('*', ' vezes ').replace('^', ' elevado a ')
-            tts = gTTS(text=clean_text, lang='pt', slow=False)
-            fp = io.BytesIO()
-            tts.write_to_fp(fp)
-            fp.seek(0)
-            b64 = base64.b64encode(fp.read()).decode()
-            audio_html = f'<audio autoplay="true" style="display:none;"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
-            st.components.v1.html(audio_html, height=0)
-        except: pass
-
 # --- ESTADO ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
-if 'passo' not in st.session_state: st.session_state.passo = -1
-if 'memoria' not in st.session_state: st.session_state.memoria = {}
 if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    # Campo de Nome (Ajustado para o centro)
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve aqui a tua questão...", label_visibility="collapsed")
+    # Campo de Nome
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
 
-    # Botões em Colunas (Simulando Tabela Linha 1: Cel1 e Cel2)
-    # O CSS acima garante que estas colunas fiquem sempre lado a lado no celular
-    c1, c2 = st.columns(2)
+    # Criando a "Tabela" com st.columns mas sem fixar no fundo (para não sumir)
+    st.markdown('<div class="button-row">', unsafe_allow_html=True)
+    c1, c2 = st.columns([1, 1])
     
-    with c1: # Linha 1, Coluna 1
-        if st.button("SUBMETER"):
+    with c1:
+        if st.button("↑ SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
 
-    with c2: # Linha 1, Coluna 2
-        if st.button("LIMPAR"):
+    with c2:
+        if st.button("🗑 LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white; }</style>', unsafe_allow_html=True)
-    st.markdown(f"<h1 style='text-align:center;'>SmartProf</h1>", unsafe_allow_html=True)
-    
-    if st.session_state.passo == -1:
-        st.markdown(f"### Olá {st.session_state.nome}, qual é a tua dúvida?")
-        e1_input = st.text_area("", placeholder="Escreve aqui a tua questão...", height=150)
-        
-        if st.button("🚀 ANALISAR"):
-            play_voice("Muito bem, vou ajudar-te.")
-            st.session_state.passo = 0
-            st.rerun()
-    else:
-        if st.button("🏠 REINICIAR"):
-            st.session_state.ecra = 1
-            st.rerun()
-
+    st.title(f"Olá, {st.session_state.nome}!")
+    if st.button("🏠 VOLTAR"):
+        st.session_state.ecra = 1
+        st.rerun()
