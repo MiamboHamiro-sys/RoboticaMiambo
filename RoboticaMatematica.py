@@ -79,8 +79,8 @@ st.markdown(f"""
 
     /* Padronização do tamanho dos botões */
     .stButton > button {{
-        width: 180px !important;
-        height: 70px !important;
+        width: 100px !important;
+        height: 40px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
         border-radius: 15px !important;
@@ -132,7 +132,7 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 if st.session_state.ecra == 1:
     # Apenas o campo de Nome
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve aqui a questão...E", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Botões na parte inferior
@@ -173,4 +173,5 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
 
