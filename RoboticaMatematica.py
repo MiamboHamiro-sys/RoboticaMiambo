@@ -10,8 +10,8 @@ import re
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-# URL da imagem do robô de corpo inteiro (Aprimorada)
-ROBOT_BG = "https://img.freepik.com/premium-photo/white-friendly-robot-full-body-isolated-background-generative-ai_115803-569.jpg"
+# URL da imagem do robô (corpo inteiro, alta resolução)
+IMAGE_URL = "https://img.freepik.com/premium-photo/robot-full-body-white-background-generative-ai_115803-569.jpg"
 
 st.markdown(f"""
     <style>
@@ -20,23 +20,22 @@ st.markdown(f"""
     ::-webkit-scrollbar-track {{ background: #f1f1f1; }}
     ::-webkit-scrollbar-thumb {{ background: #007bff; border: 5px solid white; }}
     
-    /* Fundo do Ecrã 1: Robô Corpo Inteiro Ocupando Tudo */
-    .bg-ecra1 {{
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-image: url("{ROBOT_BG}");
+    /* FUNDO DO ECRÃ 1 - Robô que ocupa toda a tela */
+    .stApp {{
+        background: url("{IMAGE_URL}");
         background-size: cover;
         background-position: center;
-        z-index: -1;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
     }}
 
-    /* Caixa de texto com efeito de transparência (Glassmorphism) */
-    .glass-panel {{
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(5px);
+    /* Container para leitura nítida sobre a imagem */
+    .glass-container {{
+        background: rgba(255, 255, 255, 0.8);
         padding: 30px;
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
         margin-top: 50px;
     }}
 
@@ -44,7 +43,8 @@ st.markdown(f"""
     .footer-fixed {{
         position: fixed;
         bottom: 0; left: 0; width: 100%;
-        background-color: #ffffff; padding: 10px 5px;
+        background-color: rgba(255, 255, 255, 0.95); 
+        padding: 10px 5px;
         border-top: 3px solid #007bff; z-index: 9999;
     }}
     
@@ -57,8 +57,13 @@ st.markdown(f"""
 
     .main-content {{ padding-bottom: 220px; }}
     
-    /* Ocultar elementos nativos do Streamlit no Ecrã 1 para foco total */
-    .stApp {{ background: transparent; }}
+    /* Ajuste para o Ecrã 2 (Fundo Branco para Fórmulas) */
+    .screen2-bg {{
+        background-color: white !important;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: -2;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -66,6 +71,7 @@ st.markdown(f"""
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def play_voice(text):
+    """Gera áudio em Base64 e injeta no HTML para forçar execução no APK"""
     if text:
         try:
             clean_text = re.sub(r'[\$\{\}\\]', '', text).replace('*', ' vezes ').replace('^', ' elevado a ')
@@ -91,10 +97,7 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1 ---
 if st.session_state.ecra == 1:
-    # Injetar o fundo do robô de corpo inteiro
-    st.markdown('<div class="bg-ecra1"></div>', unsafe_allow_html=True)
-    
-    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+    st.markdown('<div class="glass-container">', unsafe_allow_html=True)
     st.title("🤖 SmartProf")
     nome_input = st.text_input("Qual o teu nome?", value=st.session_state.nome)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -118,8 +121,12 @@ if st.session_state.ecra == 1:
 
 # --- ECRÃ 2 ---
 elif st.session_state.ecra == 2:
-    # No ecrã 2 a imagem volta a ser pequena no topo para dar espaço ao exercício
-    st.markdown(f'<div class="robot-container"><img src="{ROBOT_BG}" class="robot-img"></div>', unsafe_allow_html=True)
+    # Remove o fundo do robô para foco no exercício
+    st.markdown('<div class="screen2-bg"></div>', unsafe_allow_html=True)
+    
+    # Robô pequeno apenas como ícone no topo
+    st.markdown(f'<div style="text-align:center;"><img src="{IMAGE_URL}" style="width:100px; border-radius:50%;"></div>', unsafe_allow_html=True)
+    
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
     if st.session_state.passo == -1:
