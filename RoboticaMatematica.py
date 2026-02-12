@@ -8,9 +8,6 @@ import json
 import re
 import requests
 
-# --- CONEXÃO SEGURA COM A API ---
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
@@ -24,12 +21,17 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS AVANÇADO ---
+# --- CONEXÃO API (USANDO SECRETS) ---
+try:
+    client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+except Exception as e:
+    st.error("Erro na Chave API. Verifique os Secrets do Streamlit.")
+
+# --- CSS AVANÇADO (ORIGINAL MANTIDO) ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* Fundo Estável */
     [data-testid="stAppViewContainer"] {{
         background-image: url("data:image/png;base64,{img_data}");
         background-size: cover;
@@ -39,7 +41,6 @@ st.markdown(f"""
 
     [data-testid="stHeader"] {{ display: none !important; }}
 
-    /* LEGENDA E SETA */
     .instrucao-container {{
         text-align: center;
         margin-top: 15vh;
@@ -73,7 +74,6 @@ st.markdown(f"""
         60% {{transform: translateY(-5px);}}
     }}
 
-    /* CAIXA DE TEXTO REFORMULADA */
     .stTextInput > div > div > input {{
         background-color: rgba(255, 255, 255, 0.95) !important;
         border: 4px solid #1A237E !important;
@@ -83,22 +83,19 @@ st.markdown(f"""
         text-align: center !important;
         color: #1A237E !important;
         padding: 0 !important; 
-        line-height: 100px !important; /* Centralização vertical absoluta */
+        line-height: 100px !important;
     }}
 
-    /* Visibilidade do Placeholder */
     ::placeholder {{ 
         color: #1A237E !important; 
         opacity: 0.7 !important; 
     }}
 
-    /* Container do Nome */
     .name-box {{
         padding: 0 10%;
     }}
 
-    /* TABELA DE BOTÕES (LADO A LADO) */
-    [data-testid="stHorizontalBlock"] {{ display: flex !important; 
+    [data-testid="stHorizontalBlock"] {{ display: flex !important;
         flex-direction: row !important; 
         flex-wrap: nowrap !important; 
         gap: 5px !important; margin-top: 
@@ -107,7 +104,7 @@ st.markdown(f"""
     }}
 
     .stButton > button {{
-        width: 118px !important;
+        width: 100% !important;
         height: 40px !important;
         background-color: white !important;
         border: 4px solid #1A237E !important;
@@ -122,30 +119,26 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# --- ESTADO ---
+# --- ESTADO DO SISTEMA ---
 if 'ecra' not in st.session_state: st.session_state.ecra = 1
 if 'nome' not in st.session_state: st.session_state.nome = ""
-# Estados adicionais para lógica construtivista
 if 'mensagens' not in st.session_state: st.session_state.mensagens = []
-if 'memoria_oculta' not in st.session_state: st.session_state.memoria_oculta = None
-if 'exercicio_pendente' not in st.session_state: st.session_state.exercicio_pendente = False
+if 'memoria_oculta' not in st.session_state: st.session_state.memoria_oculta = ""
+if 'exercicio_ativo' not in st.session_state: st.session_state.exercicio_ativo = False
 
-# --- LÓGICA DO TUTOR ---
-SYSTEM_PROMPT = """Você é o Robô ProfSmart, um tutor construtivista. 
-Sua missão é ensinar, não resolver.
+SYSTEM_PROMPT = """Você é o Robô ProfSmart, um tutor baseado no construtivismo. 
+MISSÃO: Ensinar o aluno a partir de exercícios similares. NUNCA dê a resolução do exercício original (E1) do aluno.
+
 REGRAS:
-1. NUNCA resolva o exercício original (E1) do aluno.
-2. Se o aluno enviar um exercício (E1), resolva-o em sua mente (oculto), identifique o resultado final e guarde-o.
-3. Crie IMEDIATAMENTE um exercício similar (ES1).
-4. Mostre ao aluno apenas a resolução detalhada de ES1 em passos (Passo 1, Passo 2...).
-5. Se o aluno insistir ou disser "não consigo", encoraje-o a olhar o exemplo similar.
-6. Bloqueie qualquer nova questão até que o aluno responda a atual.
-7. Para questões teóricas, use analogias da cultura de Moçambique (mercados, machambas, chapa, frutas locais).
-8. Use LaTeX: $equação$. Sinais: $\implies$ ou $\iff$. Cada expressão em uma linha.
-9. Respostas do aluno:
-   - Igual ao seu resultado oculto: "Parabéns, pelo empenho" e nota 10.
-   - Equivalente mas diferente: "estás num bom caminho continua, reveja os passo".
-   - Errado: "Infelizmente, errou, reveja os passo".
+1. Quando receber um exercício (E1), resolva-o ocultamente e guarde o resultado final na sua memória.
+2. Não mostre a resolução de E1 ao aluno, sob nenhuma circunstância.
+3. Gere um exercício similar (ES1) e resolva-o detalhadamente em passos (Passo 1, Passo 2...).
+4. Se o aluno acertar o resultado de E1, diga: "Parabéns, pelo empenho" e dê nota 10.
+5. Se o resultado for equivalente mas incompleto: "estás num bom caminho continua, reveja os passo".
+6. Se o resultado for errado: "Infelizmente, errou, reveja os passo".
+7. Questões teóricas: Use analogias da cultura moçambicana (machamba, chapa, mercados, locais). Avalie com % (se < 95%, peça para melhorar).
+8. Matemática: Use LaTeX entre $ $ em linhas únicas. Use $\implies$ ou $\iff$.
+9. Não avance para nova questão até o aluno terminar a atual ou reiniciar.
 """
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
@@ -163,75 +156,67 @@ if st.session_state.ecra == 1:
     st.markdown('</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
-    
     with col1:
-        if st.button("SUBMETER", use_container_width=True):
+        if st.button("SUBMETER"):
             if st.session_state.nome:
                 st.session_state.ecra = 2
                 st.rerun()
-    
     with col2:
-        if st.button("LIMPAR", use_container_width=True):
+        if st.button("LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
 
-# --- ECRÃ 2: INTERAÇÃO (PROFESSOR SMART) ---
+# --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
-    st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: #F8F9FA !important; }</style>', unsafe_allow_html=True)
+    # Reset Estilo Chat
+    st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white !important; }</style>', unsafe_allow_html=True)
     
-    # Topo Fixo conforme solicitado
+    # Topo Fixo
     st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a)! Sou o {st.session_state.nome}! Sou o Robô ProfSmart.</h2>", unsafe_allow_html=True)
     
-    # Botão que Reinicia a conversa (Limpa tudo)
-    if st.button("🔄 Reiniciar e Limpar Tudo"):
+    # Botão Reiniciar conversa
+    if st.button("🔄 Reiniciar Conversa (Limpar Tudo)"):
         st.session_state.mensagens = []
-        st.session_state.memoria_oculta = None
-        st.session_state.exercicio_pendente = False
+        st.session_state.memoria_oculta = ""
+        st.session_state.exercicio_ativo = False
         st.rerun()
 
-    # Área do Chat
-    for message in st.session_state.mensagens:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    # Histórico do Chat
+    for m in st.session_state.mensagens:
+        with st.chat_message(m["role"]):
+            st.markdown(m["content"])
 
-    if prompt := st.chat_input("Apresente sua questão ou exercício..."):
+    # Input do Aluno
+    if prompt := st.chat_input("Insira seu exercício ou resposta..."):
         
-        # Bloqueio: Não avança sem resposta da anterior
-        if st.session_state.exercicio_pendente and "resultado" not in prompt.lower() and not any(char.isdigit() for char in prompt):
-            st.warning("Apresenta a resposta da questão anterior ou reinicie")
+        # Bloqueio Construtivista
+        if st.session_state.exercicio_ativo and "resultado" not in prompt.lower() and not any(c.isdigit() for c in prompt):
+             st.warning("Apresenta a resposta da questão anterior ou reinicie")
         else:
             st.session_state.mensagens.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                # Lógica Construtivista via API
-                response = client.chat.completions.create(
-                    model="llama3-8b-8192",
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "assistant", "content": f"Memória atual: {st.session_state.memoria_oculta}"},
-                        *st.session_state.mensagens
-                    ]
-                )
-                
-                full_response = response.choices[0].message.content
-                
-                # Simulação simples de extração de memória (idealmente usar JSON na API)
-                if "resultado final guardado" in full_response.lower() or st.session_state.memoria_oculta is None:
-                     st.session_state.exercicio_pendente = True
-                
-                st.markdown(full_response)
-                st.session_state.mensagens.append({"role": "assistant", "content": full_response})
-                
-                # Feedback de voz
-                tts = gTTS(text=full_response[:200], lang='pt') # Limitado para velocidade
-                audio_io = io.BytesIO()
-                tts.write_to_fp(audio_io)
-                b64_audio = base64.b64encode(audio_io.getvalue()).decode()
-                st.markdown(f'<audio src="data:audio/mp3;base64,{b64_audio}" autoplay></audio>', unsafe_allow_html=True)
-
-    if st.sidebar.button("Voltar ao Início"):
-        st.session_state.ecra = 1
-        st.rerun()
-
+                try:
+                    res = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.mensagens
+                    )
+                    resposta = res.choices[0].message.content
+                    
+                    # Logica de detecção de novo exercício
+                    if "Passo 1" in resposta:
+                        st.session_state.exercicio_ativo = True
+                    
+                    st.markdown(resposta)
+                    st.session_state.mensagens.append({"role": "assistant", "content": resposta})
+                    
+                    # Voz (gTTS)
+                    tts = gTTS(text=re.sub(r'[*$]', '', resposta[:250]), lang='pt')
+                    b = io.BytesIO()
+                    tts.write_to_fp(b)
+                    st.markdown(f'<audio src="data:audio/mp3;base64,{base64.b64encode(b.getvalue()).decode()}" autoplay></audio>', unsafe_allow_html=True)
+                    
+                except Exception as e:
+                    st.error("Erro na comunicação com o cérebro do robô.")
