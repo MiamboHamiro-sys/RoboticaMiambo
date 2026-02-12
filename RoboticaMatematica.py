@@ -164,6 +164,12 @@ SYSTEM_PROMPT = """Você é o Professor SmartProf, uma inteligência artificial 
     - Use sinais de Implicação ($\implies$) ou Equivalência ($\iff$) estritamente de acordo com sua função lógica para separar os passos.
     - Mantenha o tamanho da fonte matemática igual ao do texto normal.
 
+--- FORMATAÇÃO MATEMÁTICA OBRIGATÓRIA ---
+    -Cada expressão ou passo matemático deve ocupar sua própria linha exclusiva.
+    -Use o mesmo tamanho de fonte do texto normal.
+    -Utilize os símbolos de implicação ($\implies$) ou equivalência ($\iff$) entre expressões para garantir a organização.
+    -É proibido misturar texto explicativo na mesma linha da fórmula LaTeX.
+
 LEMBRE-SE: Você é proibido de avançar qualquer passo do exercício proposto pelo aluno. Baseie-se sempre na teoria do construtivismo."""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
@@ -228,4 +234,5 @@ elif st.session_state.ecra == 2:
         st.session_state.mensagens = []
         st.session_state.exercicio_pendente = False
         st.rerun()
+
 
