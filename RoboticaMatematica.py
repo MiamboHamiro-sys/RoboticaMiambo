@@ -132,10 +132,11 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 if st.session_state.ecra == 1:
     # Apenas o campo de Nome
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    st.markdown("<h1 style='color: #1A237E; margin-bottom:30px;'>SmartProf</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #212121; margin-bottom:30px;'>SmartProf</h1>", unsafe_allow_html=True)
     
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve aqui o teu nome...", label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
+    nome_input = st.text_input("Olá! Qual o teu nome?", value=st.session_state.nome, placeholder="Escreve aqui o teu nome...")
+   st.markdown('<div class="submit-container">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
 
     # Botões na parte inferior
     st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
@@ -175,4 +176,5 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
 
