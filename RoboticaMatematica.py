@@ -96,7 +96,7 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="robot-container"></div>', unsafe_allow_html=True)
     nome_in = st.text_input("Escreve o teu nome:", value=st.session_state.nome)
     
     st.markdown('<div class="footer-fixed">', unsafe_allow_html=True)
@@ -122,6 +122,7 @@ elif st.session_state.ecra == 2:
     if st.button("🏠 VOLTAR"):
         st.session_state.ecra = 1
         st.rerun()
+
 
 
 
