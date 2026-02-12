@@ -11,7 +11,7 @@ import requests
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-# URL da imagem do robô de corpo inteiro
+# URL da imagem do robô (Professor)
 IMAGE_URL = "https://thumbs.dreamstime.com/b/professor-de-rob%C3%B4-moderno-na-faculdade-gradua%C3%A7%C3%A3o-que-mant%C3%A9m-o-conceito-intelig%C3%AAncia-artificial-para-laptops-online-robot-pac-218181889.jpg?w=576"
 
 def get_base64_img(url):
@@ -23,7 +23,7 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS MINIMALISTA E POSICIONAMENTO ---
+# --- CSS REFINADO ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
@@ -37,59 +37,61 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Estilo Geral e Fontes */
+    /* Estilo Geral */
     * {{
         font-family: 'Poppins', sans-serif;
         color: #1A237E !important;
     }}
 
-    /* Esconder elementos nativos do Streamlit */
+    /* Esconder elementos nativos */
     [data-testid="stHeader"], [data-testid="stToolbar"] {{
         display: none !important;
     }}
 
-    /* Centralização do campo de nome */
+    /* Container do Input de Nome - CORREÇÃO DE CORTE */
+    .stTextInput > div > div > input {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border: 4px solid #1A237E !important;
+        border-radius: 25px !important;
+        height: 90px !important; /* Aumentado para não cortar o texto */
+        font-size: 32px !important; /* Fonte grande e visível */
+        text-align: center !important;
+        padding: 10px !important;
+        line-height: 1.5 !important;
+    }}
+
+    /* Centralização do Campo */
     .input-container {{
-        margin-top: 25vh;
+        margin-top: 35vh;
         display: flex;
         justify-content: center;
+        padding: 0 10%;
     }}
 
-    /* Estilização do Campo de Nome */
-    .stTextInput > div > div > input {{
-        background-color: rgba(255, 255, 255, 0.9) !important;
-        border: 3px solid #1A237E !important;
-        border-radius: 20px !important;
-        height: 70px !important;
-        font-size: 24px !important;
-        text-align: center !important;
-    }}
-
-    /* Rodapé Fixo para os Botões Inferiores */
+    /* Rodapé Fixo Horizontal - BOTÕES LADO A LADO */
     .footer-buttons {{
         position: fixed;
-        bottom: 50px;
+        bottom: 40px;
         left: 0;
         width: 100%;
         display: flex;
         justify-content: center;
-        gap: 20px;
+        gap: 15px;
         padding: 0 20px;
+        z-index: 1000;
     }}
 
-    /* Padronização do tamanho dos botões */
+    /* Botões Padronizados */
     .stButton > button {{
-        width: 118px !important;
-        height: 40px !important;
+        width: 160px !important;
+        height: 65px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
-        border-radius: 15px !important;
-        font-size: 20px !important;
-        font-weight: bold !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        border-radius: 20px !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        transition: 0.3s;
     }}
 
     .stButton > button:hover {{
@@ -130,24 +132,21 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    # Apenas o campo de Nome
     st.markdown('<div class="input-container">', unsafe_allow_html=True)
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve aqui a questão...E", label_visibility="collapsed")
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Botões na parte inferior
+    # Botões na Horizontal
     st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        if st.button("SUBMETER"):
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("↑ SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
-
-    with col2:
-        if st.button("LIMPAR"):
+    with c2:
+        if st.button("🗑 LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -161,10 +160,9 @@ elif st.session_state.ecra == 2:
     
     if st.session_state.passo == -1:
         st.markdown(f"### Olá {st.session_state.nome}, qual é a tua dúvida?")
-        e1_input = st.text_area("", placeholder="Escreve aqui a questão...", height=150)
+        e1_input = st.text_area("", placeholder="Escreve aqui a tua questão...", height=150)
         
         if st.button("🚀 ANALISAR"):
-            # Lógica Groq mantida
             play_voice("Deixa-me ajudar-te com isso.")
             st.session_state.passo = 0
             st.rerun()
@@ -173,6 +171,3 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
-
-
-
