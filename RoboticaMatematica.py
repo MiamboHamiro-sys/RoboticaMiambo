@@ -131,8 +131,6 @@ if 'memoria_oculta' not in st.session_state: st.session_state.memoria_oculta = N
 if 'exercicio_pendente' not in st.session_state: st.session_state.exercicio_pendente = False
 
 # --- LÓGICA DO TUTOR ---
-client = Groq(api_key="COLOQUE_SUA_CHAVE_AQUI")
-
 SYSTEM_PROMPT = """Você é o Robô ProfSmart, um tutor construtivista. 
 Sua missão é ensinar, não resolver.
 REGRAS:
@@ -236,3 +234,4 @@ elif st.session_state.ecra == 2:
     if st.sidebar.button("Voltar ao Início"):
         st.session_state.ecra = 1
         st.rerun()
+
