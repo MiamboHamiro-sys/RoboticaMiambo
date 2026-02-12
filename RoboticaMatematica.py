@@ -47,8 +47,8 @@ st.markdown(f"""
         background-color: rgba(255, 255, 255, 0.95) !important;
         border: 4px solid #1A237E !important;
         border-radius: 20px !important;
-        height: 100px !important; 
-        font-size: 35px !important;
+        height: 120px !important; 
+        font-size: 20px !important;
         text-align: center !important;
         color: #1A237E !important;
         font-weight: 600 !important;
@@ -123,3 +123,4 @@ elif st.session_state.ecra == 2:
     if st.button("🏠 VOLTAR"):
         st.session_state.ecra = 1
         st.rerun()
+
