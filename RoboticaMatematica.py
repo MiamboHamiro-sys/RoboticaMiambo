@@ -72,8 +72,8 @@ st.markdown(f"""
 
     /* Estilo dos Botões do Streamlit */
     .stButton > button {{
-        width: 150px !important; /* Tamanho fixo para ambos */
-        height: 60px !important;
+        width: 118px !important; /* Tamanho fixo para ambos */
+        height: 50px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
         border-radius: 15px !important;
@@ -97,7 +97,7 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
     # Campo de Nome
-    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve o teu nome aqui", label_visibility="collapsed")
 
     # Criando a "Tabela" com st.columns mas sem fixar no fundo (para não sumir)
     st.markdown('<div class="button-row">', unsafe_allow_html=True)
@@ -123,4 +123,5 @@ elif st.session_state.ecra == 2:
     if st.button("🏠 VOLTAR"):
         st.session_state.ecra = 1
         st.rerun()
+
 
