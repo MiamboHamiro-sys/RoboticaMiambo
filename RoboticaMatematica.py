@@ -40,24 +40,28 @@ st.markdown(f"""
         background-color: rgba(255, 255, 255, 0.95) !important;
         border: 4px solid #1A237E !important;
         border-radius: 20px !important;
-        height: 100px !important; /* Altura ideal para evitar cortes */
+        height: 100px !important; 
         font-size: 24px !important;
-        text-align: center !important; /* Centraliza horizontalmente */
+        text-align: center !important; 
         color: #1A237E !important;
         font-family: 'Poppins', sans-serif !important;
-        line-height: 100px !important; /* Força centralização vertical do texto digitado */
+        /* Garante que o texto digitado não seja cortado e fique ao centro */
+        padding: 0px !important; 
+        line-height: normal !important;
     }}
 
-    /* FORÇAR VISIBILIDADE DO TEXTO "Escreva o teu nome aqui" (Placeholder) */
-    ::placeholder {{ /* Chrome, Firefox, Opera, Safari 10.1+ */
+    /* FORÇAR VISIBILIDADE E CENTRALIZAÇÃO DO PLACEHOLDER ANTES DO TOQUE */
+    ::placeholder {{ 
         color: #1A237E !important;
-        opacity: 0.7 !important; /* Visível mesmo sem tocar */
+        opacity: 0.8 !important; 
+        text-align: center !important;
+        line-height: 100px !important; /* Centraliza verticalmente o placeholder */
     }}
-    :-ms-input-placeholder {{ /* Internet Explorer 10-11 */
+    ::-webkit-input-placeholder {{ 
+        line-height: 100px !important; 
+        text-align: center !important;
         color: #1A237E !important;
-    }}
-    ::-ms-input-placeholder {{ /* Microsoft Edge */
-        color: #1A237E !important;
+        opacity: 0.8 !important;
     }}
 
     .name-box {{
@@ -65,7 +69,7 @@ st.markdown(f"""
         padding: 0 10%;
     }}
 
-    /* Mantendo a Tabela de Botões intacta conforme solicitado */
+    /* ESTRUTURA DE BOTÕES MANTIDA INTACTA */
     [data-testid="stHorizontalBlock"] {{
         display: flex !important;
         flex-direction: row !important;
@@ -98,8 +102,8 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
     st.markdown('<div class="name-box">', unsafe_allow_html=True)
-    # Placeholder definido aqui para aparecer sempre
-    nome = st.text_input("", value=st.session_state.nome, placeholder="Escreve o teu nome aqui", label_visibility="collapsed")
+    # Placeholder centralizado e visível
+    nome = st.text_input("", value=st.session_state.nome, placeholder="Escreva o teu nome aqui", label_visibility="collapsed")
     st.session_state.nome = nome
     st.markdown('</div>', unsafe_allow_html=True)
 
