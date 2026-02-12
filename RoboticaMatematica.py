@@ -79,7 +79,7 @@ st.markdown(f"""
 
     /* Padronização do tamanho dos botões */
     .stButton > button {{
-        width: 100px !important;
+        width: 118px !important;
         height: 40px !important;
         background-color: white !important;
         border: 3px solid #1A237E !important;
@@ -140,14 +140,14 @@ if st.session_state.ecra == 1:
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        if st.button("↑ SUBMETER"):
+        if st.button("SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
 
     with col2:
-        if st.button("🗑 LIMPAR"):
+        if st.button("LIMPAR"):
             st.session_state.nome = ""
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
@@ -173,5 +173,6 @@ elif st.session_state.ecra == 2:
         if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
+
 
 
