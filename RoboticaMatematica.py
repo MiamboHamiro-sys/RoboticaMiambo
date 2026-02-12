@@ -99,14 +99,14 @@ st.markdown(f"""
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 15px !important;
-        margin-top: 30px !important;
+        gap: 5px !important;
+        margin-top: 20px !important;
         padding: 0 10% !important;
     }}
 
     .stButton > button {{
         width: 118px !important;
-        height: 70px !important;
+        height: 40px !important;
         background-color: white !important;
         border: 4px solid #1A237E !important;
         border-radius: 15px !important;
@@ -161,4 +161,5 @@ elif st.session_state.ecra == 2:
     if st.button("Voltar ao Ecrã 1"):
         st.session_state.ecra = 1
         st.rerun()
+
 
