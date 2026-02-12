@@ -97,7 +97,7 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
     # Campo de Nome
-    nome_input = st.text_area("", placeholder="Escreve aqui a tua questão...", height=150)
+    nome_input = st.text_input("Escreve o teu nome:", key="user_name")
 
     # Criando a "Tabela" com st.columns mas sem fixar no fundo (para não sumir)
     st.markdown('<div class="button-row">', unsafe_allow_html=True)
@@ -123,4 +123,5 @@ elif st.session_state.ecra == 2:
     if st.button("🏠 VOLTAR"):
         st.session_state.ecra = 1
         st.rerun()
+
 
