@@ -23,12 +23,12 @@ def get_base64_img(url):
 
 img_data = get_base64_img(IMAGE_URL)
 
-# --- CSS REFINADO (Sem retângulo superior, Fonte maior, Botão interno) ---
+# --- CSS MINIMALISTA E POSICIONAMENTO ---
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* Fundo do Robô */
+    /* Fundo com o Robô */
     [data-testid="stAppViewContainer"] {{
         background-image: url("data:image/png;base64,{img_data}");
         background-size: cover;
@@ -37,56 +37,67 @@ st.markdown(f"""
         background-attachment: fixed;
     }}
 
-    /* Estilo Geral */
+    /* Estilo Geral e Fontes */
     * {{
         font-family: 'Poppins', sans-serif;
-        color: #1A237E;
+        color: #1A237E !important;
     }}
 
-    /* Esconder o Header padrão do Streamlit e o retângulo indesejado */
-    [data-testid="stHeader"], .st-emotion-cache-18ni7ap {{
+    /* Esconder elementos nativos do Streamlit */
+    [data-testid="stHeader"], [data-testid="stToolbar"] {{
         display: none !important;
     }}
 
-    /* Container de Identificação */
-    .input-wrapper {{
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        padding: 40px;
-        border-radius: 25px;
-        max-width: 550px;
-        margin: 15% auto;
-        text-align: center;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    /* Centralização do campo de nome */
+    .input-container {{
+        margin-top: 25vh;
+        display: flex;
+        justify-content: center;
     }}
 
-    /* Texto com tamanho aumentado */
-    .big-label {{
+    /* Estilização do Campo de Nome */
+    .stTextInput > div > div > input {{
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border: 3px solid #1A237E !important;
+        border-radius: 20px !important;
+        height: 70px !important;
         font-size: 24px !important;
-        font-weight: 600;
-        margin-bottom: 20px;
-        display: block;
+        text-align: center !important;
     }}
 
-    /* Estilização do Input de Nome */
-    div[data-baseweb="input"] {{
-        border: 2px solid #1A237E !important;
-        border-radius: 50px !important;
-        background: white !important;
-        padding-right: 10px; /* Espaço para o botão interno */
+    /* Rodapé Fixo para os Botões Inferiores */
+    .footer-buttons {{
+        position: fixed;
+        bottom: 50px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        padding: 0 20px;
     }}
 
-    input {{
+    /* Padronização do tamanho dos botões */
+    .stButton > button {{
+        width: 180px !important;
+        height: 70px !important;
+        background-color: white !important;
+        border: 3px solid #1A237E !important;
+        border-radius: 15px !important;
         font-size: 20px !important;
-        padding: 15px 25px !important;
+        font-weight: bold !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }}
 
-    /* Botão de Limpar (Separado) */
-    .clear-btn-container {{
-        margin-top: 15px;
+    .stButton > button:hover {{
+        background-color: #1A237E !important;
+        color: white !important;
     }}
-    
-    /* Ecrã 2: Reset Visual */
+
+    /* Ecrã 2: Limpeza */
     .white-bg {{
         background-color: white !important;
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -117,50 +128,48 @@ if 'passo' not in st.session_state: st.session_state.passo = -1
 if 'memoria' not in st.session_state: st.session_state.memoria = {}
 if 'nome' not in st.session_state: st.session_state.nome = ""
 
-# --- ECRÃ 1: INÍCIO ---
+# --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
-    st.markdown('<span class="big-label">Olá! Como te chamas?</span>', unsafe_allow_html=True)
+    # Apenas o campo de Nome
+    st.markdown('<div class="input-container">', unsafe_allow_html=True)
+    nome_input = st.text_input("", value=st.session_state.nome, placeholder="TEU NOME", label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Botões na parte inferior
+    st.markdown('<div class="footer-buttons">', unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
     
-    # Coluna para simular o botão dentro do input
-    col_inp, col_btn = st.columns([0.85, 0.15])
-    
-    with col_inp:
-        nome_input = st.text_input("", value=st.session_state.nome, placeholder="Escreve o teu nome...", label_visibility="collapsed")
-    
-    with col_btn:
-        # Botão de Seta (Dentro da linha visual do input)
-        if st.button("↑", help="Submeter"):
+    with col1:
+        if st.button("↑ SUBMETER"):
             if nome_input:
                 st.session_state.nome = nome_input
                 st.session_state.ecra = 2
                 st.rerun()
 
-    # Botão de Limpar separado abaixo
-    st.markdown('<div class="clear-btn-container">', unsafe_allow_html=True)
-    if st.button("🗑️ Limpar Nome"):
-        st.session_state.nome = ""
-        st.rerun()
-    st.markdown('</div></div>', unsafe_allow_html=True)
+    with col2:
+        if st.button("🗑 LIMPAR"):
+            st.session_state.nome = ""
+            st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- ECRÃ 2: MATEMÁTICA ---
+# --- ECRÃ 2: INTERAÇÃO ---
 elif st.session_state.ecra == 2:
     st.markdown('<div class="white-bg"></div>', unsafe_allow_html=True)
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; }</style>', unsafe_allow_html=True)
 
     st.markdown(f"<h1 style='text-align:center;'>SmartProf</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align:center; font-size:22px;'>Muito bem, <b>{st.session_state.nome}</b>! Em que te posso ajudar hoje?</p>", unsafe_allow_html=True)
-
+    
     if st.session_state.passo == -1:
-        e1_input = st.text_area("Apresenta a tua questão matemática...", placeholder="Ex: Resolve x + 5 = 10", height=150)
-        if st.button("🚀 Analisar Exercício"):
-            # Lógica Groq...
-            play_voice("Vamos resolver isso passo a passo.")
+        st.markdown(f"### Olá {st.session_state.nome}, qual é a tua dúvida?")
+        e1_input = st.text_area("", placeholder="Escreve aqui a questão...", height=150)
+        
+        if st.button("🚀 ANALISAR"):
+            # Lógica Groq mantida
+            play_voice("Deixa-me ajudar-te com isso.")
             st.session_state.passo = 0
             st.rerun()
     else:
-        st.write("---")
-        st.info("Resolução em curso...")
-        if st.button("🏠 Voltar ao Início"):
+        st.success("Resolução pronta!")
+        if st.button("🏠 REINICIAR"):
             st.session_state.ecra = 1
             st.rerun()
