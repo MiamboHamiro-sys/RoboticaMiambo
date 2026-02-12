@@ -105,7 +105,7 @@ st.markdown(f"""
     }}
 
     .stButton > button {{
-        width: 100% !important;
+        width: 118px !important;
         height: 70px !important;
         background-color: white !important;
         border: 4px solid #1A237E !important;
@@ -161,3 +161,4 @@ elif st.session_state.ecra == 2:
     if st.button("Voltar ao Ecrã 1"):
         st.session_state.ecra = 1
         st.rerun()
+
