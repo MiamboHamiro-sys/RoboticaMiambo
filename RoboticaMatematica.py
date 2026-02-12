@@ -10,32 +10,55 @@ import re
 # --- CONFIGURAÇÃO DA INTERFACE ---
 st.set_page_config(page_title="SmartProf", layout="wide")
 
-st.markdown("""
+# URL da imagem do robô de corpo inteiro (Aprimorada)
+ROBOT_BG = "https://img.freepik.com/premium-photo/white-friendly-robot-full-body-isolated-background-generative-ai_115803-569.jpg"
+
+st.markdown(f"""
     <style>
     /* Barra de rolagem grossa */
-    ::-webkit-scrollbar { width: 55px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: #007bff; border: 5px solid white; }
+    ::-webkit-scrollbar {{ width: 55px; }}
+    ::-webkit-scrollbar-track {{ background: #f1f1f1; }}
+    ::-webkit-scrollbar-thumb {{ background: #007bff; border: 5px solid white; }}
     
-    .robot-container { display: flex; justify-content: center; width: 100%; padding: 10px; }
-    .robot-img { width: 12.5%; min-width: 110px; }
+    /* Fundo do Ecrã 1: Robô Corpo Inteiro Ocupando Tudo */
+    .bg-ecra1 {{
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url("{ROBOT_BG}");
+        background-size: cover;
+        background-position: center;
+        z-index: -1;
+    }}
+
+    /* Caixa de texto com efeito de transparência (Glassmorphism) */
+    .glass-panel {{
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(5px);
+        padding: 30px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        margin-top: 50px;
+    }}
 
     /* Rodapé Fixo */
-    .footer-fixed {
+    .footer-fixed {{
         position: fixed;
         bottom: 0; left: 0; width: 100%;
         background-color: #ffffff; padding: 10px 5px;
         border-top: 3px solid #007bff; z-index: 9999;
-    }
+    }}
     
     /* Botões na mesma linha */
-    .stButton > button {
+    .stButton > button {{
         width: 100%; height: 65px;
         font-size: 11px !important;
         font-weight: bold; border-radius: 8px;
-    }
+    }}
 
-    .main-content { padding-bottom: 220px; }
+    .main-content {{ padding-bottom: 220px; }}
+    
+    /* Ocultar elementos nativos do Streamlit no Ecrã 1 para foco total */
+    .stApp {{ background: transparent; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -43,7 +66,6 @@ st.markdown("""
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def play_voice(text):
-    """Gera áudio em Base64 e injeta no HTML para forçar execução no APK"""
     if text:
         try:
             clean_text = re.sub(r'[\$\{\}\\]', '', text).replace('*', ' vezes ').replace('^', ' elevado a ')
@@ -53,7 +75,6 @@ def play_voice(text):
             fp.seek(0)
             b64 = base64.b64encode(fp.read()).decode()
             
-            # Componente de áudio com ID único e script de auto-execução
             audio_html = f"""
                 <audio autoplay="true" style="display:none;">
                     <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
@@ -70,8 +91,13 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 
 # --- ECRÃ 1 ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
+    # Injetar o fundo do robô de corpo inteiro
+    st.markdown('<div class="bg-ecra1"></div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+    st.title("🤖 SmartProf")
     nome_input = st.text_input("Qual o teu nome?", value=st.session_state.nome)
+    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="footer-fixed">', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
@@ -92,7 +118,8 @@ if st.session_state.ecra == 1:
 
 # --- ECRÃ 2 ---
 elif st.session_state.ecra == 2:
-    st.markdown('<div class="robot-container"><img src="https://cdn-icons-png.flaticon.com/512/4712/4712139.png" class="robot-img"></div>', unsafe_allow_html=True)
+    # No ecrã 2 a imagem volta a ser pequena no topo para dar espaço ao exercício
+    st.markdown(f'<div class="robot-container"><img src="{ROBOT_BG}" class="robot-img"></div>', unsafe_allow_html=True)
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
     if st.session_state.passo == -1:
@@ -127,7 +154,6 @@ elif st.session_state.ecra == 2:
                     duvida = st.text_input(f"Dúvida no Passo {i+1}?", key=f"d{i}")
                     if duvida:
                         if st.button("🎙️ ESCLARECER DÚVIDA", key=f"btn{i}"):
-                            # Explicação clara da dúvida
                             expl = client.chat.completions.create(
                                 model="llama-3.3-70b-versatile",
                                 messages=[{"role": "user", "content": f"Explique claramente o passo {passos[i]['txt']} para quem tem a dúvida: {duvida}"}]
