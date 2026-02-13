@@ -174,7 +174,7 @@ LEMBRE-SE: Você é proibido de avançar qualquer passo do exercício proposto p
 
 # --- ECRÃ 1: IDENTIFICAÇÃO ---
 if st.session_state.ecra == 1:
-    st.markdown('<div class="instrucao-container"><div class="legenda-texto">Clica e escreva teu nome</div><div class="seta">↓</div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="instrucao-container"><div class="legenda-texto">Escreva e Submeta teu Nome</div><div class="seta">↓</div></div>', unsafe_allow_html=True)
     st.markdown('<div class="name-box">', unsafe_allow_html=True)
     nome = st.text_input("", value=st.session_state.nome, placeholder="Escreve o teu nome aqui", label_visibility="collapsed")
     st.session_state.nome = nome
@@ -196,14 +196,14 @@ elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white !important; }</style>', unsafe_allow_html=True)
     
     # Topo Fixo
-    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a)! {st.session_state.nome}! Sou o Robô ProfSmart.</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a), {st.session_state.nome}! Sou Robô ProfSmart.</h2>", unsafe_allow_html=True)
 
     # Chat
     for m in st.session_state.mensagens:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
-    if prompt := st.chat_input("Apresente sua questão..."):
+    if prompt := st.chat_input("Apresente sua questão de Matemática..."):
         if st.session_state.exercicio_pendente and not any(c.isdigit() for c in prompt):
             st.warning("Apresenta a resposta da questão anterior ou reinicie")
         else:
@@ -234,5 +234,6 @@ elif st.session_state.ecra == 2:
         st.session_state.mensagens = []
         st.session_state.exercicio_pendente = False
         st.rerun()
+
 
 
