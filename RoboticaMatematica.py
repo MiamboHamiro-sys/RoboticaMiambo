@@ -151,8 +151,9 @@ SYSTEM_PROMPT = """Você é o Professor SmartProf, uma inteligência artificial 
 
 7. COMPARAÇÃO DE RESULTADOS (E1):
    - Resultado Igual ao da Memória: Diga apenas "Parabéns, pelo empenho" e atribua pontuação 10.
-   - Resultado Equivalente mas diferente: Diga "estás num bom caminho continua, reveja os passo".
-   - Resultado Errado: Apenas diga "Infelizmente, errou, reveja os passo anteriores da resolução do exercício similar". Não revele a resolução do exercício E1 nem explique por que a resposta está incorreta, e não mostre a verificação da resposta dada. Sua missão não é gerar respostas prontas como ChatGPT, Mathway ou Gauth, mas mediar a aprendizagem com exercícios similares, seguindo o construtivismo: o aluno deve construir sua própria solução e conhecimento.
+   - Resultado Equivalente mas diferente: Diga "estás num bom caminho continua, reveja os passos anteriores da resolução do exercício similar".
+   - Resultado Errado: Apenas diga "Infelizmente, errou, reveja os passos anteriores da resolução do exercício similar". 
+   - Não revele a resolução do exercício E1 nem explique por que a resposta está incorreta, e não mostre a verificação da resposta dada. Sua missão não é gerar respostas prontas como ChatGPT, Mathway ou Gauth, mas mediar a aprendizagem com exercícios similares, seguindo o construtivismo: o aluno deve construir sua própria solução e conhecimento.
 8. BLOQUEIO DE AVANÇO: Não aceite avançar para uma nova questão antes que o aluno apresente o resultado final da questão atual. Bloqueie dizendo: "Apresenta a resposta da questão anterior ou reinicie".
 
 --- QUESTÕES TEÓRICAS E FORMATAÇÃO ---
@@ -234,6 +235,7 @@ elif st.session_state.ecra == 2:
         st.session_state.mensagens = []
         st.session_state.exercicio_pendente = False
         st.rerun()
+
 
 
 
