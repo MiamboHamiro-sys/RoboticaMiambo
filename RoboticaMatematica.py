@@ -203,7 +203,7 @@ elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white !important; }</style>', unsafe_allow_html=True)
     
     # Topo Fixo
-    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a), {st.session_state.nome}! Sou Robô ProfSmart.</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a), {st.session_state.nome}! Sou teu SmartProf.</h2>", unsafe_allow_html=True)
 
     # Chat
     for m in st.session_state.mensagens:
@@ -241,3 +241,4 @@ elif st.session_state.ecra == 2:
         st.session_state.mensagens = []
         st.session_state.exercicio_pendente = False
         st.rerun()
+
