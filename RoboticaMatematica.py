@@ -1,9 +1,7 @@
 import streamlit as st
 import time
 from groq import Groq
-# from gtts import gTTS
 import base64
-import io
 import json
 import re
 import requests
@@ -227,11 +225,6 @@ elif st.session_state.ecra == 2:
                     if "Passo 1" in texto: st.session_state.exercicio_pendente = True
                     st.markdown(texto)
                     st.session_state.mensagens.append({"role": "assistant", "content": texto})
-                    
-                    # Áudio
-                    # tts = gTTS(text=re.sub(r'[*$]', '', texto[:250]), lang='pt')
-                    # b = io.BytesIO(); tts.write_to_fp(b)
-                    # st.markdown(f'<audio src="data:audio/mp3;base64,{base64.b64encode(b.getvalue()).decode()}" autoplay></audio>', unsafe_allow_html=True)
                 except:
                     st.error("Erro na conexão com a IA.")
 
@@ -241,4 +234,5 @@ elif st.session_state.ecra == 2:
         st.session_state.mensagens = []
         st.session_state.exercicio_pendente = False
         st.rerun()
+
 
