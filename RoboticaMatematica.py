@@ -218,7 +218,7 @@ elif st.session_state.ecra == 2:
             with st.chat_message("assistant"):
                 try:
                     res = client.chat.completions.create(
-                        model="llama-3.1-8b-instant",
+                        model="openai/gpt-oss-20b",
                         messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.mensagens
                     )
                     texto = res.choices[0].message.content
