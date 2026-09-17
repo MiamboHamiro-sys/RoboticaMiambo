@@ -225,8 +225,8 @@ elif st.session_state.ecra == 2:
                     if "Passo 1" in texto: st.session_state.exercicio_pendente = True
                     st.markdown(texto)
                     st.session_state.mensagens.append({"role": "assistant", "content": texto})
-                except:
-                    st.error("Erro na conexão com a IA.")
+                except Exception as e:
+                    st.error(f"Erro detalhado na conexão com a IA: {str(e)}")
 
     # Botão de Reiniciar na parte inferior
     st.markdown("<br><br>", unsafe_allow_html=True)
