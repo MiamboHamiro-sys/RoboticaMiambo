@@ -214,12 +214,53 @@ Após concluir a resolução do exercício similar, apresente obrigatoriamente a
 
 9. TEORIA: Para perguntas como "O que é função?", não dê respostas diretas. Dê dicas para o aluno construir a resposta fazendo conexão com o cotidiano Moçambicano (usando cultura, locais como mercados/machambas, chapas, frutas e objetos locais).
 10. AVALIAÇÃO TEÓRICA: Atribua uma percentagem à resposta do aluno. Se for inferior a 95%, recomende a melhoria.
-11. FORMATAÇÃO MATEMÁTICA OBRIGATÓRIA (CRÍTICO):
-    - É EXPRESSAMENTE PROIBIDO escrever fórmulas matemáticas em texto plano (como x^2, a/b ou x^2-3x=2). 
-    - TODA E QUALQUER expressão, equação ou variável matemática DEVE OBRIGATORIAMENTE ser envolvida por duplos símbolos de dólar para o LaTeX (exemplo correto: $$x^2 + 2x - 3 = 0$$).
-    - Cada expressão ou passo matemático deve ocupar sua própria linha exclusiva.
-    - Utilize os símbolos de implicação ($\implies$) ou equivalência ($\iff$) entre expressões para garantir a organização.
-    - Nunca misture texto explicativo comum na mesma linha da fórmula matemática em LaTeX.
+
+11. FORMATAÇÃO MATEMÁTICA VISUAL E DIDÁCTICA (OBRIGATÓRIA):
+
+Todas as expressões matemáticas devem ser apresentadas visualmente, como aparecem nos livros escolares de Matemática.
+
+REGRAS INVIOLÁVEIS:
+
+1. Nunca apresente comandos LaTeX como texto visível ao estudante.
+
+2. Todas as expressões matemáticas devem utilizar LaTeX válido, delimitado por $$ no início e no fim.
+
+3. Cada expressão matemática deve ocupar uma linha própria.
+
+4. Utilize obrigatoriamente:
+
+- \frac{a}{b} para fracções.
+- x^{2} para expoentes.
+- \sqrt{x} para raízes quadradas.
+- \sqrt[3]{x} para raízes cúbicas.
+- x_{1} para índices inferiores.
+- \times para multiplicações.
+- \div para divisões.
+- \neq para indicar diferença.
+- \leq e \geq para desigualdades.
+- \{ e \} para conjuntos.
+
+5. Nunca utilize a/b para representar fracções. O numerador deve aparecer visualmente sobre o denominador.
+
+6. Nunca utilize x^2 como texto simples. O expoente deve aparecer visualmente elevado.
+
+7. Nunca utilize sqrt(x). O radicando deve aparecer dentro do símbolo da raiz.
+
+8. Não utilize comandos como \text{ou} dentro das expressões matemáticas. Escreva as explicações em português fora dos blocos matemáticos.
+
+9. Nunca misture explicações textuais com fórmulas na mesma linha.
+
+10. Utilize \displaystyle sempre que necessário para garantir fracções, somatórios e outras expressões em tamanho adequado.
+
+11. Apresente cada transformação matemática numa linha separada, evitando expressões excessivamente longas.
+
+12. Quando apresentar uma fracção, potência, raiz ou outro conceito matemático, explique os seus elementos utilizando linguagem simples.
+
+13. Evite notações matemáticas excessivamente compactas que possam dificultar a compreensão de estudantes iniciantes.
+
+14. Antes de enviar uma resposta, verifique se todos os delimitadores, parênteses, chavetas e comandos LaTeX estão correctamente escritos.
+
+15. A clareza visual e pedagógica das expressões matemáticas é obrigatória em todas as respostas do SmartProf.
 
 LEMBRE-SE: Você é proibido de avançar qualquer passo do exercício proposto pelo aluno, mesmo se o aluno posteriormente apresentar resultado errado ou resposta errada. Baseie-se sempre na teoria do construtivismo."""
 
@@ -243,6 +284,30 @@ if st.session_state.ecra == 1:
             st.rerun()
 
 # --- ECRÃ 2: CHAT INTELIGENTE ---
+
+    # --- FORMATAÇÃO VISUAL DAS EXPRESSÕES MATEMÁTICAS ---
+
+    def apresentar_matematica(texto):
+
+        # Separar as expressões matemáticas do texto
+        partes = re.split(r'(\$\$[\s\S]*?\$\$)', texto)
+
+        for parte in partes:
+
+            if not parte.strip():
+                continue
+
+            # Apresentar expressões matemáticas
+            if parte.startswith("$$") and parte.endswith("$$"):
+
+                formula = parte[2:-2].strip()
+
+                st.latex(formula)
+
+            else:
+                # Apresentar explicações normalmente
+                st.markdown(parte)
+
 elif st.session_state.ecra == 2:
     st.markdown('<style>[data-testid="stAppViewContainer"] { background-image: none !important; background-color: white !important; }</style>', unsafe_allow_html=True)
     
@@ -250,9 +315,9 @@ elif st.session_state.ecra == 2:
     st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a), {st.session_state.nome}! Sou teu SmartProf.</h2>", unsafe_allow_html=True)
 
     # Chat
-    for m in st.session_state.mensagens:
+        for m in st.session_state.mensagens:
         with st.chat_message(m["role"]):
-            st.markdown(m["content"])
+            apresentar_matematica(m["content"])
 
     if prompt := st.chat_input("Apresente sua questão de Matemática..."):
         if st.session_state.exercicio_pendente and not any(c.isdigit() for c in prompt):
@@ -267,10 +332,19 @@ elif st.session_state.ecra == 2:
                         model="openai/gpt-oss-20b",
                         messages=[{"role": "system", "content": SYSTEM_PROMPT}] + st.session_state.mensagens
                     )
+                    
                     texto = res.choices[0].message.content
-                    if "Passo 1" in texto: st.session_state.exercicio_pendente = True
-                    st.markdown(texto)
-                    st.session_state.mensagens.append({"role": "assistant", "content": texto})
+
+                    if "Passo 1" in texto:
+                        st.session_state.exercicio_pendente = True
+
+                    # Apresentar a resposta com formatação matemática
+                    apresentar_matematica(texto)
+
+                    st.session_state.mensagens.append({
+                        "role": "assistant",
+                        "content": texto
+                    })
                 except Exception as e:
                     st.error(f"Erro detalhado na conexão com a IA: {str(e)}")
 
