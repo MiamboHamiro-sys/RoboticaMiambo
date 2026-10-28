@@ -134,7 +134,45 @@ if 'nome' not in st.session_state: st.session_state.nome = ""
 if 'mensagens' not in st.session_state: st.session_state.mensagens = []
 if 'exercicio_pendente' not in st.session_state: st.session_state.exercicio_pendente = False
 
-SYSTEM_PROMPT = """Você é o Professor SmartProf, uma inteligência artificial estritamente dedicada ao ensino de Matemática. Sua filosofia é o Construtivismo: o aluno deve gerar seu próprio conhecimento através da resolução de seus próprios desafios.
+# --- FORMATAÇÃO MATEMÁTICA COMO NOS LIVROS ---
+
+def apresentar_matematica(texto):
+    """
+    Apresenta fórmulas matemáticas com LaTeX,
+    mantendo as explicações textuais da IA.
+    """
+
+    if not texto:
+        return
+
+    # Identifica fórmulas entre $$...$$ ou $...$
+    partes = re.split(
+        r'(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)',
+        texto
+    )
+
+    for parte in partes:
+        if not parte.strip():
+            continue
+
+        # Fórmulas em linha própria: fracções, raízes,
+        # potências, equações e outras expressões.
+        if parte.startswith("$$") and parte.endswith("$$"):
+            formula = parte[2:-2].strip()
+            if formula:
+                st.latex(formula)
+
+        # Expressões entre um único par de dólares.
+        elif parte.startswith("$") and parte.endswith("$"):
+            formula = parte[1:-1].strip()
+            if formula:
+                st.latex(formula)
+
+        # Texto explicativo normal.
+        else:
+            st.markdown(parte)
+
+SYSTEM_PROMPT = r"""Você é o Professor SmartProf, uma inteligência artificial estritamente dedicada ao ensino de Matemática. Sua filosofia é o Construtivismo: o aluno deve gerar seu próprio conhecimento através da resolução de seus próprios desafios.
 
 --- REGRAS INVIOLÁVEIS DE ATUAÇÃO ---
 
@@ -214,12 +252,23 @@ Após concluir a resolução do exercício similar, apresente obrigatoriamente a
 
 9. TEORIA: Para perguntas como "O que é função?", não dê respostas diretas. Dê dicas para o aluno construir a resposta fazendo conexão com o cotidiano Moçambicano (usando cultura, locais como mercados/machambas, chapas, frutas e objetos locais).
 10. AVALIAÇÃO TEÓRICA: Atribua uma percentagem à resposta do aluno. Se for inferior a 95%, recomende a melhoria.
-11. FORMATAÇÃO MATEMÁTICA OBRIGATÓRIA (CRÍTICO):
-    - É EXPRESSAMENTE PROIBIDO escrever fórmulas matemáticas em texto plano (como x^2, a/b ou x^2-3x=2). 
-    - TODA E QUALQUER expressão, equação ou variável matemática DEVE OBRIGATORIAMENTE ser envolvida por duplos símbolos de dólar para o LaTeX (exemplo correto: $$x^2 + 2x - 3 = 0$$).
-    - Cada expressão ou passo matemático deve ocupar sua própria linha exclusiva.
-    - Utilize os símbolos de implicação ($\implies$) ou equivalência ($\iff$) entre expressões para garantir a organização.
-    - Nunca misture texto explicativo comum na mesma linha da fórmula matemática em LaTeX.
+
+11. FORMATAÇÃO MATEMÁTICA OBRIGATÓRIA — APRESENTAÇÃO COMO NOS LIVROS:
+
+- Todas as expressões matemáticas devem ser escritas em LaTeX válido.
+- Para fórmulas que ocupam uma linha própria, utiliza obrigatoriamente $$...$$.
+- Nunca escrevas fórmulas em texto plano, como x^2, a/b, sqrt(25) ou 2x+4=10.
+- Usa \frac{a}{b} para fracções, \sqrt{x} para raízes, x^{2} para potências e x_{1} para índices.
+- Usa \times para multiplicação, \div para divisão, \leq para menor ou igual, \geq para maior ou igual, \neq para diferente, \implies para implicação e \iff para equivalência.
+- Cada operação matemática importante deve aparecer numa linha exclusiva.
+- Explica primeiro, em linguagem simples, o que será feito e porquê. Depois apresenta a fórmula ou operação numa linha separada.
+- Quando houver vários cálculos, apresenta cada transformação numa linha própria, pela ordem correcta.
+- Não coloques frases explicativas dentro das expressões LaTeX.
+- Utiliza apenas dados do exercício similar (ES1) nas demonstrações.
+- Verifica se os delimitadores $$ estão correctamente abertos e fechados.
+- Não escrevas delimitadores incompletos, fórmulas LaTeX sem fecho ou comandos matemáticos inválidos.
+- Antes de enviar a resposta, confirma que todas as expressões matemáticas estão correctamente formatadas.
+
 
 LEMBRE-SE: Você é proibido de avançar qualquer passo do exercício proposto pelo aluno, mesmo se o aluno posteriormente apresentar resultado errado ou resposta errada. Baseie-se sempre na teoria do construtivismo."""
 
@@ -250,6 +299,12 @@ elif st.session_state.ecra == 2:
     st.markdown(f"<h2 style='text-align:center; color:#1A237E;'>Bem-vindo(a), {st.session_state.nome}! Sou teu SmartProf.</h2>", unsafe_allow_html=True)
 
     # Chat
+    
+    # Chat: histórico com fórmulas formatadas
+    for m in st.session_state.mensagens:
+        with st.chat_message(m["role"]):
+            apresentar_matematica(m["content"])
+
     for m in st.session_state.mensagens:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
@@ -269,7 +324,7 @@ elif st.session_state.ecra == 2:
                     )
                     texto = res.choices[0].message.content
                     if "Passo 1" in texto: st.session_state.exercicio_pendente = True
-                    st.markdown(texto)
+                    apresentar_matematica(texto)
                     st.session_state.mensagens.append({"role": "assistant", "content": texto})
                 except Exception as e:
                     st.error(f"Erro detalhado na conexão com a IA: {str(e)}")
