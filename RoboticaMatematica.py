@@ -298,8 +298,8 @@ elif st.session_state.ecra == 2:
 
     # Chat
         for m in st.session_state.mensagens:
-        with st.chat_message(m["role"]):
-            apresentar_matematica(m["content"])
+    with st.chat_message(m["role"]):
+        st.markdown(m["content"])
 
     if prompt := st.chat_input("Apresente sua questão de Matemática..."):
         if st.session_state.exercicio_pendente and not any(c.isdigit() for c in prompt):
